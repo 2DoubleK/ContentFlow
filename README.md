@@ -33,6 +33,14 @@ psql -d contentflow -f backend/src/main/resources/db/schema.sql
 
 ## Run
 
+All services in separate PowerShell windows:
+
+```powershell
+.\start-dev.ps1
+```
+
+Use `.\start-dev.ps1 -SkipInstall` to skip dependency installation checks.
+
 Backend:
 
 ```bash
@@ -59,6 +67,13 @@ npm run dev
 ```
 
 ## Verify
+
+Health checks:
+
+```bash
+curl http://localhost:8080/actuator/health
+curl http://localhost:8000/health
+```
 
 ```bash
 cd backend
