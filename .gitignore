@@ -10,12 +10,16 @@ backend/.mvn/wrapper/maven-wrapper.jar
 # Node
 web/node_modules/
 web/dist/
+web/.npm-cache/
+web/*.tsbuildinfo
 
 # Python
 agent/.venv/
-agent/__pycache__/
+__pycache__/
+*.pyc
 agent/.pytest_cache/
 agent/chroma/
+agent/*.egg-info/
 
 # IDE
 .idea/

@@ -30,8 +30,8 @@ Excluded:
 
 Three separate projects are required:
 
-- `backend/`: Spring Boot 3, Java 21, PostgreSQL, Spring Security, JWT, MyBatis-Plus.
-- `agent/`: Python 3.11, FastAPI, LangGraph, LangChain, Chroma, Pydantic.
+- `backend/`: Spring Boot 3, Java 17, PostgreSQL, Spring Security, JWT, MyBatis-Plus.
+- `agent/`: Python 3.12, FastAPI, LangGraph, LangChain, Chroma, Pydantic.
 - `web/`: Vue 3, TypeScript, Vite, Pinia, Vue Router, Element Plus, Axios.
 
 No project may own another project's responsibility. Integration happens only over HTTP.

@@ -6,7 +6,7 @@
 
 **Architecture:** The repository contains three independent applications: `backend/`, `agent/`, and `web/`. The frontend calls only the backend; the backend owns PostgreSQL and authorization; the Agent owns LangGraph, Chroma, and model orchestration and never connects to PostgreSQL.
 
-**Tech Stack:** Java 21, Spring Boot 3, MyBatis-Plus, PostgreSQL, JWT, Python 3.11, FastAPI, LangGraph, Chroma, Pydantic, Vue 3, Vite, TypeScript, Pinia, Element Plus, Axios.
+**Tech Stack:** Java 17, Spring Boot 3, MyBatis-Plus, PostgreSQL, JWT, Python 3.12, FastAPI, LangGraph, Chroma, Pydantic, Vue 3, Vite, TypeScript, Pinia, Element Plus, Axios.
 
 ## Global Constraints
 
@@ -25,7 +25,7 @@
 
 Create:
 
-- `backend/pom.xml`: Maven dependencies and Java 21 build config.
+- `backend/pom.xml`: Maven dependencies and Java 17 build config.
 - `backend/src/main/java/com/contentflow/ContentFlowApplication.java`: Spring Boot entry point.
 - `backend/src/main/java/com/contentflow/common/*`: API response and error handling.
 - `backend/src/main/java/com/contentflow/config/*`: security, JWT, CORS, MyBatis config.

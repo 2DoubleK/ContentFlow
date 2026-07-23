@@ -1,0 +1,25 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/contentflow}
+    username: ${POSTGRES_USER:contentflow}
+    password: ${POSTGRES_PASSWORD:contentflow}
+    driver-class-name: org.postgresql.Driver
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+contentflow:
+  jwt:
+    secret: ${JWT_SECRET:change-me-change-me-change-me-change-me}
+    ttl-minutes: ${JWT_TTL_MINUTES:1440}
+  agent:
+    base-url: ${AGENT_BASE_URL:http://localhost:8000}
+    internal-token: ${INTERNAL_API_TOKEN:dev-internal-token}
