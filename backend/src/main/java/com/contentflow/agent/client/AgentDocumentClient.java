@@ -1,6 +1,6 @@
-package com.contentflow.document;
+package com.contentflow.agent.client;
 
-import com.contentflow.config.AgentProperties;
+import com.contentflow.common.config.AgentProperties;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;

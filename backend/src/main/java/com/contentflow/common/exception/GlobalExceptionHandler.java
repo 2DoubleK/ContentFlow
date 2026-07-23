@@ -1,4 +1,6 @@
-package com.contentflow.common;
+package com.contentflow.common.exception;
+
+import com.contentflow.common.api.ApiResponse;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,7 +1,10 @@
-package com.contentflow.project;
+package com.contentflow.project.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.contentflow.common.AppException;
+import com.contentflow.common.exception.AppException;
+import com.contentflow.project.dto.ProjectDtos;
+import com.contentflow.project.entity.ProjectEntity;
+import com.contentflow.project.mapper.ProjectMapper;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,12 @@ public class ProjectService {
         project.setOwnerId(ownerId);
         project.setName(request.name());
         project.setDescription(request.description());
+        project.setPlatform(request.platform());
+        project.setDomain(request.domain());
+        project.setPositioning(request.positioning());
+        project.setTargetAudience(request.targetAudience());
+        project.setContentStyle(request.contentStyle());
+        project.setStatus("ACTIVE");
         projectMapper.insert(project);
         return toResponse(project);
     }
@@ -62,6 +71,11 @@ public class ProjectService {
             project.setName(request.name());
         }
         project.setDescription(request.description());
+        project.setPlatform(request.platform());
+        project.setDomain(request.domain());
+        project.setPositioning(request.positioning());
+        project.setTargetAudience(request.targetAudience());
+        project.setContentStyle(request.contentStyle());
         projectMapper.updateById(project);
         return toResponse(project);
     }
@@ -72,6 +86,15 @@ public class ProjectService {
     }
 
     ProjectDtos.ProjectResponse toResponse(ProjectEntity project) {
-        return new ProjectDtos.ProjectResponse(project.getId(), project.getName(), project.getDescription());
+        return new ProjectDtos.ProjectResponse(
+                project.getId(),
+                project.getName(),
+                project.getDescription(),
+                project.getPlatform(),
+                project.getDomain(),
+                project.getPositioning(),
+                project.getTargetAudience(),
+                project.getContentStyle()
+        );
     }
 }

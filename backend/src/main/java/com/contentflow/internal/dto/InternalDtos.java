@@ -1,4 +1,4 @@
-package com.contentflow.internal;
+package com.contentflow.internal.dto;
 
 public class InternalDtos {
     public record ProjectContextResponse(Long projectId, Long ownerId, String name, String description) {}

@@ -1,12 +1,13 @@
-package com.contentflow.internal;
+package com.contentflow.internal.controller;
 
-import com.contentflow.common.ApiResponse;
-import com.contentflow.common.AppException;
-import com.contentflow.config.AgentProperties;
-import com.contentflow.content.ContentDtos;
-import com.contentflow.content.ContentService;
-import com.contentflow.project.ProjectEntity;
-import com.contentflow.project.ProjectService;
+import com.contentflow.common.api.ApiResponse;
+import com.contentflow.common.config.AgentProperties;
+import com.contentflow.common.exception.AppException;
+import com.contentflow.content.dto.ContentDtos;
+import com.contentflow.content.service.ContentService;
+import com.contentflow.internal.dto.InternalDtos;
+import com.contentflow.project.entity.ProjectEntity;
+import com.contentflow.project.service.ProjectService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

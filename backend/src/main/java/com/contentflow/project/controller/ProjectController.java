@@ -1,7 +1,9 @@
-package com.contentflow.project;
+package com.contentflow.project.controller;
 
-import com.contentflow.auth.CurrentUser;
-import com.contentflow.common.ApiResponse;
+import com.contentflow.common.api.ApiResponse;
+import com.contentflow.project.dto.ProjectDtos;
+import com.contentflow.project.service.ProjectService;
+import com.contentflow.security.CurrentUser;
 import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;

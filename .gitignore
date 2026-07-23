@@ -21,6 +21,14 @@ agent/.pytest_cache/
 agent/chroma/
 agent/*.egg-info/
 
+# Local infrastructure data
+postgres_data/
+redis_data/
+minio_data/
+chroma_data/
+data/
+logs/
+
 # IDE
 .idea/
 .vscode/

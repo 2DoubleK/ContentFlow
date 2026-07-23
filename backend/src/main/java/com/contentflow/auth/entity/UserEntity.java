@@ -1,4 +1,4 @@
-package com.contentflow.auth;
+package com.contentflow.auth.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

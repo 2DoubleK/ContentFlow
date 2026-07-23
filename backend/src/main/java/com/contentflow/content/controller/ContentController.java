@@ -1,12 +1,16 @@
-package com.contentflow.content;
+package com.contentflow.content.controller;
 
-import com.contentflow.auth.CurrentUser;
-import com.contentflow.common.ApiResponse;
+import com.contentflow.common.api.ApiResponse;
+import com.contentflow.content.dto.ContentDtos;
+import com.contentflow.content.service.ContentService;
+import com.contentflow.security.CurrentUser;
 import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,6 +20,12 @@ public class ContentController {
 
     public ContentController(ContentService contentService) {
         this.contentService = contentService;
+    }
+
+    @PostMapping("/api/contents")
+    public ApiResponse<ContentDtos.ContentResponse> create(@AuthenticationPrincipal CurrentUser user,
+                                                            @RequestBody ContentDtos.CreateRequest request) {
+        return ApiResponse.ok(contentService.create(user.id(), request));
     }
 
     @PostMapping("/api/projects/{projectId}/generate")
@@ -34,5 +44,18 @@ public class ContentController {
     @GetMapping("/api/contents/{id}")
     public ApiResponse<ContentDtos.ContentResponse> detail(@AuthenticationPrincipal CurrentUser user, @PathVariable Long id) {
         return ApiResponse.ok(contentService.detail(user.id(), id));
+    }
+
+    @PutMapping("/api/contents/{id}")
+    public ApiResponse<ContentDtos.ContentResponse> update(@AuthenticationPrincipal CurrentUser user,
+                                                           @PathVariable Long id,
+                                                           @RequestBody ContentDtos.UpdateRequest request) {
+        return ApiResponse.ok(contentService.update(user.id(), id, request));
+    }
+
+    @DeleteMapping("/api/contents/{id}")
+    public ApiResponse<Void> delete(@AuthenticationPrincipal CurrentUser user, @PathVariable Long id) {
+        contentService.delete(user.id(), id);
+        return ApiResponse.ok(null);
     }
 }

@@ -6,6 +6,8 @@ $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $PowerShellExe = (Get-Command powershell.exe).Source
+$RunnerDir = Join-Path $env:TEMP "contentflow-dev"
+New-Item -ItemType Directory -Force -Path $RunnerDir | Out-Null
 
 function Test-CommandAvailable {
   param([string]$Name)
@@ -88,12 +90,17 @@ function Start-ServiceWindow {
     [string]$Command
   )
 
+  $scriptName = ($Title -replace '[^a-zA-Z0-9_-]', '_') + ".ps1"
+  $scriptPath = Join-Path $RunnerDir $scriptName
+  $scriptContent = "`$Host.UI.RawUI.WindowTitle = '$Title'" + [Environment]::NewLine + $Command
+  Set-Content -Path $scriptPath -Value $scriptContent -Encoding UTF8
+
   Start-Process -FilePath $PowerShellExe -WorkingDirectory $WorkingDirectory -ArgumentList @(
     "-NoExit",
     "-ExecutionPolicy",
     "Bypass",
-    "-Command",
-    "`$Host.UI.RawUI.WindowTitle = '$Title'; $Command"
+    "-File",
+    $scriptPath
   )
 }
 
@@ -120,9 +127,9 @@ $agentCommand = New-ServiceCommand `
   -EnvPath ".env" `
   -SetupLines @(
     'if (-not $SkipInstall -and -not (Test-Path ".venv\Scripts\python.exe")) { py -3.12 -m venv .venv }',
-    'if (-not $SkipInstall) { .\.venv\Scripts\python.exe -m pip install -e ".[test]" }'
+    'if (-not $SkipInstall -and (Test-Path ".venv\Scripts\python.exe")) { .\.venv\Scripts\python.exe -m pip install -e ".[test]" }'
   ) `
-  -RunLine '.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000'
+  -RunLine 'if (Test-Path ".venv\Scripts\python.exe") { .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000 } else { py -3.12 -m uvicorn app.main:app --reload --port 8000 }'
 
 $webCommand = New-ServiceCommand `
   -Name "ContentFlow Web" `

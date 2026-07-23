@@ -1,4 +1,4 @@
-package com.contentflow.common;
+package com.contentflow.common.api;
 
 public record ApiResponse<T>(boolean success, T data, String message) {
     public static <T> ApiResponse<T> ok(T data) {

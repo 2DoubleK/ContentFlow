@@ -1,10 +1,14 @@
-package com.contentflow.document;
+package com.contentflow.document.service;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
-import com.contentflow.common.AppException;
-import com.contentflow.project.ProjectService;
+import com.contentflow.agent.client.AgentDocumentClient;
+import com.contentflow.common.exception.AppException;
+import com.contentflow.document.dto.DocumentDtos;
+import com.contentflow.document.entity.DocumentEntity;
+import com.contentflow.document.mapper.DocumentMapper;
+import com.contentflow.project.service.ProjectService;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 

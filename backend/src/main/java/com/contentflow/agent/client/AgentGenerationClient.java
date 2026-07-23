@@ -1,6 +1,7 @@
-package com.contentflow.content;
+package com.contentflow.agent.client;
 
-import com.contentflow.config.AgentProperties;
+import com.contentflow.common.config.AgentProperties;
+import com.contentflow.content.dto.ContentDtos;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 

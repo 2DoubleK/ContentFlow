@@ -31,6 +31,16 @@ Create a PostgreSQL database, then apply:
 psql -d contentflow -f backend/src/main/resources/db/schema.sql
 ```
 
+## Local Infrastructure
+
+Copy `.env.example` to `.env`, then start PostgreSQL, Redis, MinIO, and Chroma:
+
+```powershell
+docker compose up -d postgres redis minio chroma minio-init
+```
+
+MinIO console: `http://localhost:9001`.
+
 ## Run
 
 All services in separate PowerShell windows:

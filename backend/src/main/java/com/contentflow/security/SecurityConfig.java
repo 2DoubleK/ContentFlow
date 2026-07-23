@@ -1,6 +1,6 @@
-package com.contentflow.config;
+package com.contentflow.security;
 
-import com.contentflow.auth.CurrentUser;
+import com.contentflow.common.config.AgentProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,4 +1,4 @@
-package com.contentflow.config;
+package com.contentflow.security;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

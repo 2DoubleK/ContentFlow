@@ -1,4 +1,4 @@
-package com.contentflow.common;
+package com.contentflow.common.exception;
 
 import org.springframework.http.HttpStatus;
 

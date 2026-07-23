@@ -1,8 +1,12 @@
-package com.contentflow.document;
+package com.contentflow.document.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.contentflow.common.AppException;
-import com.contentflow.project.ProjectService;
+import com.contentflow.agent.client.AgentDocumentClient;
+import com.contentflow.common.exception.AppException;
+import com.contentflow.document.dto.DocumentDtos;
+import com.contentflow.document.entity.DocumentEntity;
+import com.contentflow.document.mapper.DocumentMapper;
+import com.contentflow.project.service.ProjectService;
 import java.io.IOException;
 import java.util.List;
 import org.springframework.http.HttpStatus;

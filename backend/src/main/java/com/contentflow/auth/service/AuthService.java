@@ -1,8 +1,11 @@
-package com.contentflow.auth;
+package com.contentflow.auth.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.contentflow.common.AppException;
-import com.contentflow.config.JwtService;
+import com.contentflow.auth.dto.AuthDtos;
+import com.contentflow.auth.entity.UserEntity;
+import com.contentflow.auth.mapper.UserMapper;
+import com.contentflow.common.exception.AppException;
+import com.contentflow.security.JwtService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,6 +44,14 @@ public class AuthService {
             throw new AppException(HttpStatus.UNAUTHORIZED, "invalid username or password");
         }
         return response(user);
+    }
+
+    public AuthDtos.CurrentUserResponse currentUser(Long userId) {
+        UserEntity user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new AppException(HttpStatus.NOT_FOUND, "user not found");
+        }
+        return new AuthDtos.CurrentUserResponse(user.getId(), user.getUsername(), user.getRole());
     }
 
     private void validate(String username, String password) {

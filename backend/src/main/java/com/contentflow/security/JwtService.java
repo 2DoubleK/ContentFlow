@@ -1,4 +1,4 @@
-package com.contentflow.config;
+package com.contentflow.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

@@ -1,9 +1,14 @@
-package com.contentflow.project;
+package com.contentflow.project.service;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
-import com.contentflow.common.AppException;
+import com.contentflow.common.exception.AppException;
+import com.contentflow.project.dto.ProjectDtos;
+import com.contentflow.project.entity.ProjectEntity;
+import com.contentflow.project.mapper.ProjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -26,5 +31,26 @@ class ProjectServiceTest {
         assertThatThrownBy(() -> service.requireOwned(1L, 3L))
                 .isInstanceOf(AppException.class)
                 .hasMessage("project access denied");
+    }
+
+    @Test
+    void preservesProjectProfileFieldsOnCreate() {
+        ProjectMapper mapper = org.mockito.Mockito.mock(ProjectMapper.class);
+        ProjectService service = new ProjectService(mapper);
+        ProjectDtos.ProjectRequest request = new ProjectDtos.ProjectRequest(
+                "Demo",
+                "Desc",
+                "Web",
+                "contentflow.com",
+                "定位",
+                "目标用户",
+                "蓝白青"
+        );
+
+        ProjectDtos.ProjectResponse response = service.create(8L, request);
+
+        assertThat(response.platform()).isEqualTo("Web");
+        assertThat(response.domain()).isEqualTo("contentflow.com");
+        verify(mapper).insert(org.mockito.ArgumentMatchers.any(ProjectEntity.class));
     }
 }
