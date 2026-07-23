@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import com.contentflow.common.api.PageResult;
 
 @RestController
 public class ContentController {
@@ -39,6 +41,14 @@ public class ContentController {
     public ApiResponse<List<ContentDtos.ContentResponse>> list(@AuthenticationPrincipal CurrentUser user,
                                                                @PathVariable Long projectId) {
         return ApiResponse.ok(contentService.list(user.id(), projectId));
+    }
+
+    @GetMapping("/api/contents")
+    public ApiResponse<PageResult<ContentDtos.ContentResponse>> page(@AuthenticationPrincipal CurrentUser user,
+            @RequestParam Long projectId, @RequestParam(required = false) String status,
+            @RequestParam(required = false) String keyword, @RequestParam(defaultValue = "1") long page,
+            @RequestParam(defaultValue = "20") long size) {
+        return ApiResponse.ok(contentService.page(user.id(), projectId, status, keyword, page, size));
     }
 
     @GetMapping("/api/contents/{id}")

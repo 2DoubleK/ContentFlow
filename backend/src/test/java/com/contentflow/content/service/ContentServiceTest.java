@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.ArgumentCaptor;
 
 import com.contentflow.agent.client.AgentGenerationClient;
 import com.contentflow.content.dto.ContentDtos;
@@ -77,6 +78,38 @@ class ContentServiceTest {
 
         service.create(1L, new ContentDtos.CreateRequest(2L, "Title", "Summary", "# Body", java.util.List.of("Java", "Spring")));
 
-        verify(tagMapper, org.mockito.Mockito.times(2)).insert(any());
+        verify(tagMapper, org.mockito.Mockito.times(2)).insert(any(com.contentflow.content.entity.ContentTagEntity.class));
+    }
+
+    @Test
+    void replacesTagsWhenUpdatingContent() {
+        ContentMapper contentMapper = mock(ContentMapper.class);
+        ContentTagMapper tagMapper = mock(ContentTagMapper.class);
+        ContentEntity content = new ContentEntity();
+        content.setId(6L);
+        content.setProjectId(2L);
+        content.setTitle("Old");
+        content.setMarkdown("old");
+        when(contentMapper.selectById(6L)).thenReturn(content);
+        ContentService service = new ContentService(contentMapper, mock(ProjectService.class),
+                mock(AgentGenerationClient.class), tagMapper);
+
+        service.update(1L, 6L, new ContentDtos.UpdateRequest("New", "Summary", "# Body", java.util.List.of("Java")));
+
+        verify(tagMapper).delete(any(com.baomidou.mybatisplus.core.conditions.Wrapper.class));
+        verify(tagMapper).insert(any(com.contentflow.content.entity.ContentTagEntity.class));
+    }
+
+    @Test
+    void storesReferencesAsJsonbMetadata() {
+        ContentMapper mapper = mock(ContentMapper.class);
+        ContentService service = new ContentService(mapper, mock(ProjectService.class), mock(AgentGenerationClient.class));
+
+        service.create(1L, new ContentDtos.CreateRequest(2L, "Title", "Summary", "# Body", java.util.List.of(),
+                java.util.List.of(new ContentDtos.ReferenceItem(3L, "guide.md", 1))));
+
+        ArgumentCaptor<ContentEntity> content = ArgumentCaptor.forClass(ContentEntity.class);
+        verify(mapper).insert(content.capture());
+        assertThat(content.getValue().getReferencesJson()).contains("guide.md");
     }
 }
