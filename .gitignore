@@ -1,0 +1,22 @@
+# Local credentials
+*.env
+.env
+账号密码.txt
+
+# Java
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Node
+web/node_modules/
+web/dist/
+
+# Python
+agent/.venv/
+agent/__pycache__/
+agent/.pytest_cache/
+agent/chroma/
+
+# IDE
+.idea/
+.vscode/
