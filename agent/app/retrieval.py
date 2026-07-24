@@ -10,8 +10,8 @@ from pypdf import PdfReader
 
 
 class RetrievalService:
-    def __init__(self, persist_path: str) -> None:
-        self.client = chromadb.PersistentClient(path=persist_path)
+    def __init__(self, persist_path: str | None = None, client=None) -> None:
+        self.client = client or chromadb.PersistentClient(path=persist_path or "./chroma")
         self.collection = self.client.get_or_create_collection("contentflow_documents")
 
     def index_text(self, project_id: int, document_id: int, filename: str, text: str) -> int:

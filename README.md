@@ -68,6 +68,9 @@ pip install -e ".[test]"
 uvicorn app.main:app --reload --port 8000
 ```
 
+Agent can use a local persistent Chroma directory (`CHROMA_PATH`) or a Chroma server (`CHROMA_HOST` and `CHROMA_PORT`).
+Copy `agent/.env.example` before configuring an LLM or embedding provider. The Agent uses `X-Internal-Token` for every call to Spring Boot internal endpoints.
+
 Frontend:
 
 ```bash

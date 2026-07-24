@@ -16,6 +16,7 @@ public class DocumentEntity {
     private String fileExt;
     private String mimeType;
     private Long fileSize;
+    private Integer chunkCount;
     private String status;
     private String errorMessage;
     private OffsetDateTime createdAt;
@@ -36,6 +37,8 @@ public class DocumentEntity {
     public void setMimeType(String mimeType) { this.mimeType = mimeType; }
     public Long getFileSize() { return fileSize; }
     public void setFileSize(Long fileSize) { this.fileSize = fileSize; }
+    public Integer getChunkCount() { return chunkCount; }
+    public void setChunkCount(Integer chunkCount) { this.chunkCount = chunkCount; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public String getErrorMessage() { return errorMessage; }

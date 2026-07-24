@@ -1,18 +1,22 @@
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 
-from app.config import settings
+from app.config import create_chroma_client, settings
 from app.graph import build_graph
 from app.llm import LlmService
 from app.retrieval import RetrievalService
 from app.schemas import GenerateRequest, GenerateResponse, IndexResponse
 
 app = FastAPI(title="ContentFlow Agent")
-retrieval = RetrievalService(settings.chroma_path)
+retrieval = RetrievalService(client=create_chroma_client(settings))
 graph = build_graph(retrieval, LlmService())
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
+    try:
+        retrieval.collection.count()
+    except Exception as exception:
+        raise HTTPException(status_code=503, detail="Chroma connection failed") from exception
     return {"status": "ok"}
 
 

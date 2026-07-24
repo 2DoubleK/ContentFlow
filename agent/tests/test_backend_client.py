@@ -49,3 +49,11 @@ async def test_project_context_rejects_unrelated_user():
 
     with pytest.raises(ValueError, match="does not belong"):
         await client.get_project_context(4, 9)
+
+
+def test_backend_client_rejects_empty_required_configuration():
+    with pytest.raises(ValueError, match="BACKEND_BASE_URL"):
+        BackendClient(base_url="", internal_token="internal-token")
+
+    with pytest.raises(ValueError, match="INTERNAL_API_TOKEN"):
+        BackendClient(base_url="http://backend.test", internal_token="")

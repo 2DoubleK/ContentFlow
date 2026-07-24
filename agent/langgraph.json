@@ -1,0 +1,6 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "contentflow": "./app/langgraph_entry.py:graph"
+  }
+}

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.OffsetDateTime;
 import org.apache.ibatis.type.JdbcType;
+import com.contentflow.common.persistence.JsonbTypeHandler;
 
 @TableName(value = "cf_content", autoResultMap = true)
 public class ContentEntity {
@@ -17,7 +18,7 @@ public class ContentEntity {
     private String summary;
     private String status;
     private String markdown;
-    @TableField(value = "references_json", jdbcType = JdbcType.OTHER)
+    @TableField(value = "references_json", jdbcType = JdbcType.OTHER, typeHandler = JsonbTypeHandler.class)
     private String referencesJson;
     private OffsetDateTime createdAt;
 

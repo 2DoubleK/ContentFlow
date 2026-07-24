@@ -5,7 +5,7 @@ class LlmService:
     def generate(self, prompt: str, contexts: list[str]) -> dict[str, str]:
         joined = "\n\n".join(contexts).strip()
         title = prompt.strip().splitlines()[0][:60] or "Untitled"
-        if settings.qwen_api_key:
+        if settings.llm_api_key or settings.qwen_api_key:
             return {
                 "title": title,
                 "summary": "Generated with configured model.",

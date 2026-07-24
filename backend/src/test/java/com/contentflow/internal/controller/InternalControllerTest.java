@@ -21,12 +21,14 @@ class InternalControllerTest {
                 new AgentProperties("http://agent", "internal-token"));
         List<InternalDtos.DocumentChunkRequest> chunks = List.of(
                 new InternalDtos.DocumentChunkRequest(0, "knowledge", "project_4_document_6_chunk_0", 2));
+        List<DocumentService.ChunkInput> expectedChunks = List.of(
+                new DocumentService.ChunkInput(0, "knowledge", "project_4_document_6_chunk_0", 2));
 
         assertThat(controller.saveChunks("internal-token", 6L, new InternalDtos.DocumentChunksRequest(chunks)).success()).isTrue();
         assertThat(controller.updateStatus("internal-token", 6L,
                 new InternalDtos.DocumentStatusRequest("READY", 1, null)).success()).isTrue();
 
-        verify(documentService).saveChunks(6L, chunks);
+        verify(documentService).saveChunks(6L, expectedChunks);
         verify(documentService).updateIndexStatus(6L, "READY", 1, null);
     }
 }

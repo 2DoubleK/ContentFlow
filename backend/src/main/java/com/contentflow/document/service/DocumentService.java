@@ -5,6 +5,8 @@ import com.contentflow.agent.client.AgentDocumentClient;
 import com.contentflow.common.exception.AppException;
 import com.contentflow.document.dto.DocumentDtos;
 import com.contentflow.document.entity.DocumentEntity;
+import com.contentflow.document.entity.DocumentChunkEntity;
+import com.contentflow.document.mapper.DocumentChunkMapper;
 import com.contentflow.document.mapper.DocumentMapper;
 import com.contentflow.project.service.ProjectService;
 import java.io.IOException;
@@ -23,16 +25,23 @@ public class DocumentService {
     private final ProjectService projectService;
     private final AgentDocumentClient agentDocumentClient;
     private final MinioService minioService;
+    private final DocumentChunkMapper documentChunkMapper;
 
     public DocumentService(DocumentMapper documentMapper, ProjectService projectService, AgentDocumentClient agentDocumentClient) {
-        this(documentMapper, projectService, agentDocumentClient, null);
+        this(documentMapper, projectService, agentDocumentClient, null, null);
+    }
+    public DocumentService(DocumentMapper documentMapper, ProjectService projectService, AgentDocumentClient agentDocumentClient,
+                           MinioService minioService) {
+        this(documentMapper, projectService, agentDocumentClient, minioService, null);
     }
     @Autowired
-    public DocumentService(DocumentMapper documentMapper, ProjectService projectService, AgentDocumentClient agentDocumentClient, MinioService minioService) {
+    public DocumentService(DocumentMapper documentMapper, ProjectService projectService, AgentDocumentClient agentDocumentClient,
+                           MinioService minioService, DocumentChunkMapper documentChunkMapper) {
         this.documentMapper = documentMapper;
         this.projectService = projectService;
         this.agentDocumentClient = agentDocumentClient;
         this.minioService = minioService;
+        this.documentChunkMapper = documentChunkMapper;
     }
 
     public DocumentDtos.DocumentResponse upload(Long ownerId, Long projectId, MultipartFile file) {
@@ -110,10 +119,43 @@ public class DocumentService {
         return new DownloadFile(document.getFilename(), document.getMimeType(), minioService.get(document.getFileUrl()));
     }
 
+    public void saveChunks(Long documentId, List<ChunkInput> chunks) {
+        DocumentEntity document = requireDocument(documentId);
+        if (documentChunkMapper == null) {
+            throw new IllegalStateException("document chunk mapper is unavailable");
+        }
+        documentChunkMapper.delete(new LambdaQueryWrapper<DocumentChunkEntity>()
+                .eq(DocumentChunkEntity::getDocumentId, documentId));
+        for (ChunkInput chunk : chunks) {
+            DocumentChunkEntity entity = new DocumentChunkEntity();
+            entity.setDocumentId(documentId);
+            entity.setProjectId(document.getProjectId());
+            entity.setChunkIndex(chunk.chunkIndex());
+            entity.setContent(chunk.content());
+            entity.setChromaId(chunk.chromaId());
+            entity.setTokenCount(chunk.tokenCount());
+            documentChunkMapper.insert(entity);
+        }
+        updateIndexStatus(documentId, "READY", chunks.size(), null);
+    }
+
+    public void updateIndexStatus(Long documentId, String status, int chunkCount, String errorMessage) {
+        DocumentEntity document = requireDocument(documentId);
+        document.setStatus(status);
+        document.setChunkCount(chunkCount);
+        document.setErrorMessage(errorMessage);
+        documentMapper.updateById(document);
+    }
+
     private DocumentEntity requireOwned(Long ownerId, Long documentId) {
+        DocumentEntity document = requireDocument(documentId);
+        projectService.requireOwned(ownerId, document.getProjectId());
+        return document;
+    }
+
+    private DocumentEntity requireDocument(Long documentId) {
         DocumentEntity document = documentMapper.selectById(documentId);
         if (document == null) throw new AppException(HttpStatus.NOT_FOUND, "document not found");
-        projectService.requireOwned(ownerId, document.getProjectId());
         return document;
     }
 
@@ -123,5 +165,8 @@ public class DocumentService {
     }
 
     public record DownloadFile(String filename, String mimeType, InputStream input) {
+    }
+
+    public record ChunkInput(Integer chunkIndex, String content, String chromaId, Integer tokenCount) {
     }
 }
