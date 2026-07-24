@@ -27,3 +27,12 @@ def test_chroma_client_uses_persistent_mode_without_host(monkeypatch, tmp_path):
 
     assert config.create_chroma_client(settings) == "persistent-client"
     assert captured == {"path": str(tmp_path)}
+
+
+def test_ollama_defaults_match_verified_local_runtime():
+    settings = config.Settings(_env_file=None)
+
+    assert settings.ollama_enabled is True
+    assert settings.ollama_base_url == "http://localhost:11434/v1"
+    assert settings.ollama_model == "qwen3:1.7b"
+    assert settings.ollama_context_length == 8192

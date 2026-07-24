@@ -12,6 +12,7 @@ ContentFlow is a minimal AI content generation system with three separate applic
 - Python 3.12.
 - Node.js 20 or newer.
 - PostgreSQL.
+- Ollama when local-model fallback is required.
 
 ## Environment
 
@@ -70,6 +71,15 @@ uvicorn app.main:app --reload --port 8000
 
 Agent can use a local persistent Chroma directory (`CHROMA_PATH`) or a Chroma server (`CHROMA_HOST` and `CHROMA_PORT`).
 Copy `agent/.env.example` before configuring an LLM or embedding provider. The Agent uses `X-Internal-Token` for every call to Spring Boot internal endpoints.
+
+For the default local fallback model:
+
+```bash
+ollama pull qwen3:1.7b
+ollama run qwen3:1.7b
+```
+
+Generation providers are attempted in this order: cloud API, Ollama, then deterministic fallback. Set the `OLLAMA_*` values in `agent/.env` to select another local model.
 
 Frontend:
 

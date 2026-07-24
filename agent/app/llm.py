@@ -59,6 +59,27 @@ class LlmService:
                 logger.exception("structured content generation failed; using deterministic fallback")
         return self._fallback_generate(user_request, project_context, parsed_request, retrieved_chunks)
 
+    def parse_request_fallback(self, user_request: str, project_context: dict) -> ParsedContentRequest:
+        return self._fallback_parse(user_request, project_context)
+
+    def generate_content_fallback(
+        self,
+        user_request: str,
+        project_context: dict,
+        parsed_request: ParsedContentRequest,
+        retrieved_chunks: list[RetrievedChunk],
+    ) -> GeneratedContent:
+        return self._fallback_generate(user_request, project_context, parsed_request, retrieved_chunks)
+
+    def sanitize_references(
+        self,
+        generated: GeneratedContent,
+        retrieved_chunks: list[RetrievedChunk],
+    ) -> GeneratedContent:
+        return generated.model_copy(update={
+            "references": self._allowed_references(generated.references, retrieved_chunks),
+        })
+
     @staticmethod
     def _create_model() -> ChatOpenAI | None:
         api_key = settings.llm_api_key or settings.qwen_api_key
@@ -75,7 +96,19 @@ class LlmService:
     def _fallback_parse(user_request: str, project_context: dict) -> ParsedContentRequest:
         lowered = user_request.lower()
         rewrite_markers = ("改写", "重写", "润色", "优化", "改得", "翻译", "rewrite", "polish", "translate")
-        need_retrieval = not any(marker in lowered for marker in rewrite_markers)
+        knowledge_markers = (
+            "项目资料",
+            "知识库",
+            "上传的资料",
+            "我的资料",
+            "根据资料",
+            "结合资料",
+            "project knowledge",
+            "knowledge base",
+        )
+        need_retrieval = any(marker in lowered for marker in knowledge_markers) or not any(
+            marker in lowered for marker in rewrite_markers
+        )
         word_match = re.search(r"(\d+)\s*(?:字|词|words?)", lowered)
         platform = next(
             (name for name in ("小红书", "微信公众号", "抖音", "知乎", "B站") if name.lower() in lowered),

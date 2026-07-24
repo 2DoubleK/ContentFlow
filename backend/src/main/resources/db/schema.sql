@@ -87,14 +87,20 @@ CREATE TABLE IF NOT EXISTS cf_content (
     content_type VARCHAR(50) NOT NULL DEFAULT 'ARTICLE',
     status VARCHAR(32) NOT NULL DEFAULT 'DRAFT',
     conversation_id BIGINT,
+    agent_request_id VARCHAR(64),
     references_json JSONB NOT NULL DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT cf_content_title_not_blank CHECK (length(btrim(title)) > 0),
     CONSTRAINT cf_content_markdown_not_blank CHECK (length(btrim(markdown)) > 0),
     CONSTRAINT cf_content_status_check CHECK (status IN ('DRAFT', 'PUBLISHED', 'ARCHIVED')),
-    CONSTRAINT cf_content_type_check CHECK (content_type IN ('ARTICLE', 'SHORT_POST', 'SCRIPT', 'OTHER'))
+    CONSTRAINT cf_content_type_check CHECK (content_type IN ('ARTICLE', 'SHORT_POST', 'SCRIPT', 'TITLE', 'OTHER'))
 );
+
+ALTER TABLE cf_content ADD COLUMN IF NOT EXISTS agent_request_id VARCHAR(64);
+ALTER TABLE cf_content DROP CONSTRAINT IF EXISTS cf_content_type_check;
+ALTER TABLE cf_content ADD CONSTRAINT cf_content_type_check
+    CHECK (content_type IN ('ARTICLE', 'SHORT_POST', 'SCRIPT', 'TITLE', 'OTHER'));
 
 CREATE TABLE IF NOT EXISTS cf_content_tag (
     id BIGSERIAL PRIMARY KEY,
@@ -158,6 +164,10 @@ CREATE INDEX IF NOT EXISTS idx_cf_content_owner_created
 
 CREATE INDEX IF NOT EXISTS idx_cf_content_status
     ON cf_content (status);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_cf_content_agent_request
+    ON cf_content (agent_request_id)
+    WHERE agent_request_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_cf_content_tag_content
     ON cf_content_tag (content_id);

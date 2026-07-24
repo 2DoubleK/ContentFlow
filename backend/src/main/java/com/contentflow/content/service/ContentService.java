@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.contentflow.agent.client.AgentGenerationClient;
+import com.contentflow.agent.mapper.AgentConversationMapper;
 import com.contentflow.common.exception.AppException;
 import com.contentflow.content.dto.ContentDtos;
 import com.contentflow.content.entity.ContentEntity;
@@ -13,6 +14,7 @@ import com.contentflow.content.mapper.ContentMapper;
 import com.contentflow.content.mapper.ContentTagMapper;
 import com.contentflow.project.service.ProjectService;
 import java.util.List;
+import java.util.Set;
 import com.contentflow.common.api.PageResult;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,19 +27,26 @@ public class ContentService {
     private final ProjectService projectService;
     private final AgentGenerationClient agentGenerationClient;
     private final ContentTagMapper contentTagMapper;
+    private final AgentConversationMapper conversationMapper;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ContentService(ContentMapper contentMapper, ProjectService projectService, AgentGenerationClient agentGenerationClient) {
-        this(contentMapper, projectService, agentGenerationClient, null);
+        this(contentMapper, projectService, agentGenerationClient, null, null);
+    }
+
+    public ContentService(ContentMapper contentMapper, ProjectService projectService, AgentGenerationClient agentGenerationClient,
+                          ContentTagMapper contentTagMapper) {
+        this(contentMapper, projectService, agentGenerationClient, contentTagMapper, null);
     }
 
     @Autowired
     public ContentService(ContentMapper contentMapper, ProjectService projectService, AgentGenerationClient agentGenerationClient,
-                          ContentTagMapper contentTagMapper) {
+                          ContentTagMapper contentTagMapper, AgentConversationMapper conversationMapper) {
         this.contentMapper = contentMapper;
         this.projectService = projectService;
         this.agentGenerationClient = agentGenerationClient;
         this.contentTagMapper = contentTagMapper;
+        this.conversationMapper = conversationMapper;
     }
 
     public ContentDtos.ContentResponse generate(Long ownerId, Long projectId, ContentDtos.GenerateRequest request) {
@@ -46,6 +55,13 @@ public class ContentService {
             throw new AppException(HttpStatus.BAD_REQUEST, "prompt is required");
         }
         ContentDtos.AgentGenerateResponse generated = agentGenerationClient.generate(ownerId, projectId, request.prompt());
+        if (generated != null && generated.savedDraftId() != null) {
+            ContentDtos.ContentResponse saved = detail(ownerId, generated.savedDraftId());
+            if (!projectId.equals(saved.projectId())) {
+                throw new AppException(HttpStatus.BAD_GATEWAY, "agent returned a draft from another project");
+            }
+            return saved;
+        }
         String markdown = generated == null || generated.markdown() == null || generated.markdown().isBlank()
                 ? generated == null ? null : generated.content()
                 : generated.markdown();
@@ -75,6 +91,54 @@ public class ContentService {
 
     public ContentDtos.ContentResponse save(Long ownerId, Long projectId, String title, String summary, String markdown) {
         return save(ownerId, projectId, title, summary, markdown, "[]");
+    }
+
+    @Transactional
+    public ContentDtos.ContentResponse saveAgentDraft(AgentDraftInput input) {
+        if (input.projectId() == null || input.userId() == null) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "user id and project id are required");
+        }
+        projectService.requireOwned(input.userId(), input.projectId());
+        if (input.requestId() == null || input.requestId().isBlank() || input.requestId().length() > 64) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "valid request id is required");
+        }
+        contentMapper.lockAgentRequestId(input.requestId());
+        ContentEntity existing = contentMapper.selectOne(new LambdaQueryWrapper<ContentEntity>()
+                .eq(ContentEntity::getAgentRequestId, input.requestId())
+                .last("LIMIT 1"));
+        if (existing != null) {
+            if (!input.userId().equals(existing.getOwnerId()) || !input.projectId().equals(existing.getProjectId())) {
+                throw new AppException(HttpStatus.CONFLICT, "request id already belongs to another draft");
+            }
+            return toResponse(existing);
+        }
+        if (input.conversationId() != null
+                && (conversationMapper == null
+                || !conversationMapper.existsOwned(input.conversationId(), input.userId(), input.projectId()))) {
+            throw new AppException(HttpStatus.FORBIDDEN, "conversation does not belong to the requested user and project");
+        }
+        if (input.content() == null || input.content().isBlank()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "content is required");
+        }
+        String contentType = input.contentType() == null || input.contentType().isBlank() ? "ARTICLE" : input.contentType();
+        if (!Set.of("ARTICLE", "SHORT_POST", "SCRIPT", "TITLE", "OTHER").contains(contentType)) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "invalid content type");
+        }
+        ContentEntity content = new ContentEntity();
+        content.setOwnerId(input.userId());
+        content.setProjectId(input.projectId());
+        content.setConversationId(input.conversationId());
+        content.setAgentRequestId(input.requestId());
+        content.setTitle(input.title() == null || input.title().isBlank() ? "Untitled" : input.title());
+        content.setSummary(input.summary());
+        content.setContent(input.content());
+        content.setMarkdown(input.content());
+        content.setContentType(contentType);
+        content.setStatus("DRAFT");
+        content.setReferencesJson(serializeReferences(input.references()));
+        contentMapper.insert(content);
+        saveTags(content.getId(), input.tags());
+        return toResponse(content);
     }
 
     private ContentDtos.ContentResponse save(Long ownerId, Long projectId, String title, String summary, String markdown,
@@ -172,4 +236,8 @@ public class ContentService {
         return new ContentDtos.ContentResponse(content.getId(), content.getProjectId(), content.getTitle(),
                 content.getSummary(), content.getMarkdown());
     }
+
+    public record AgentDraftInput(Long userId, Long projectId, Long conversationId, String title, String summary,
+                                  String content, String contentType, List<String> tags,
+                                  List<ContentDtos.ReferenceItem> references, String requestId) {}
 }

@@ -29,8 +29,9 @@ minio_data/
 chroma_data/
 data/
 logs/
-agent/*-run.log
-backend/*-run.log
+agent/*-run*.log
+agent/.agent-*.log
+backend/*-run*.log
 
 # IDE
 .idea/

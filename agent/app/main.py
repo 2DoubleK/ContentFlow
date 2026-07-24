@@ -1,10 +1,11 @@
 import logging
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 
 from app.backend_client import BackendClient
 from app.config import create_chroma_client, settings
 from app.graph import build_graph
+from app.internal_auth import require_internal_token
 from app.llm import LlmService
 from app.retrieval import RetrievalService
 from app.schemas import DocumentIndexRequest, GenerateRequest, GenerateResponse, IndexResponse
@@ -27,6 +28,7 @@ def health() -> dict[str, str]:
 @app.post("/documents/index", response_model=IndexResponse)
 async def index_document(
     request: Request,
+    _: None = Depends(require_internal_token),
 ) -> IndexResponse:
     try:
         payload = await request.json()
@@ -51,13 +53,19 @@ async def index_document(
 
 
 @app.delete("/documents/{document_id}")
-def delete_document(document_id: int) -> dict[str, str]:
+def delete_document(
+    document_id: int,
+    _: None = Depends(require_internal_token),
+) -> dict[str, str]:
     retrieval.delete_document(document_id)
     return {"status": "ok"}
 
 
 @app.post("/generate", response_model=GenerateResponse)
-async def generate(request: GenerateRequest) -> GenerateResponse:
+async def generate(
+    request: GenerateRequest,
+    _: None = Depends(require_internal_token),
+) -> GenerateResponse:
     state = await graph.ainvoke({
         "user_id": request.user_id,
         "project_id": request.project_id,

@@ -9,7 +9,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
         "com.contentflow.auth.mapper",
         "com.contentflow.project.mapper",
         "com.contentflow.document.mapper",
-        "com.contentflow.content.mapper"
+        "com.contentflow.content.mapper",
+        "com.contentflow.agent.mapper"
 })
 public class ContentFlowApplication {
     public static void main(String[] args) {

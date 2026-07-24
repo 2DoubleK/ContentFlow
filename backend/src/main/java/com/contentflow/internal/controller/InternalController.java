@@ -56,6 +56,16 @@ public class InternalController {
         return ApiResponse.ok(contentService.save(request.ownerId(), id, request.title(), request.summary(), request.markdown()));
     }
 
+    @PostMapping("/agent/contents")
+    public ApiResponse<ContentDtos.ContentResponse> saveAgentContent(
+            @RequestHeader(value = "X-Internal-Token", required = false) String token,
+            @RequestBody InternalDtos.SaveAgentContentRequest request) {
+        verify(token);
+        return ApiResponse.ok(contentService.saveAgentDraft(new ContentService.AgentDraftInput(
+                request.userId(), request.projectId(), request.conversationId(), request.title(), request.summary(),
+                request.content(), request.contentType(), request.tags(), request.references(), request.requestId())));
+    }
+
     @PostMapping("/documents/{id}/chunks")
     public ApiResponse<Void> saveChunks(@RequestHeader(value = "X-Internal-Token", required = false) String token,
                                         @PathVariable Long id, @RequestBody InternalDtos.DocumentChunksRequest request) {

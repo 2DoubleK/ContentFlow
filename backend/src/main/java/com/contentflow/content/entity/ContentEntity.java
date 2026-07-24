@@ -16,8 +16,12 @@ public class ContentEntity {
     private Long ownerId;
     private String title;
     private String summary;
+    private String content;
+    private String contentType;
     private String status;
     private String markdown;
+    private Long conversationId;
+    private String agentRequestId;
     @TableField(value = "references_json", jdbcType = JdbcType.OTHER, typeHandler = JsonbTypeHandler.class)
     private String referencesJson;
     private OffsetDateTime createdAt;
@@ -32,10 +36,18 @@ public class ContentEntity {
     public void setTitle(String title) { this.title = title; }
     public String getSummary() { return summary; }
     public void setSummary(String summary) { this.summary = summary; }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+    public String getContentType() { return contentType; }
+    public void setContentType(String contentType) { this.contentType = contentType; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public String getMarkdown() { return markdown; }
     public void setMarkdown(String markdown) { this.markdown = markdown; }
+    public Long getConversationId() { return conversationId; }
+    public void setConversationId(Long conversationId) { this.conversationId = conversationId; }
+    public String getAgentRequestId() { return agentRequestId; }
+    public void setAgentRequestId(String agentRequestId) { this.agentRequestId = agentRequestId; }
     public String getReferencesJson() { return referencesJson; }
     public void setReferencesJson(String referencesJson) { this.referencesJson = referencesJson; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

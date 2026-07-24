@@ -55,3 +55,4 @@ class GeneratedContent(BaseModel):
 
 class GenerateResponse(GeneratedContent):
     markdown: str
+    saved_draft_id: int | None = Field(default=None, alias="savedDraftId")

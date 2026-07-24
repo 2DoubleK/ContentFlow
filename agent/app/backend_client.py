@@ -33,8 +33,7 @@ class BackendClient:
         })
 
     async def save_content_draft(self, payload: dict) -> dict:
-        project_id = payload["projectId"]
-        return await self._request("POST", f"/internal/projects/{project_id}/contents", json=payload)
+        return await self._request("POST", "/internal/agent/contents", json=payload)
 
     async def download_document(self, document_id: int) -> bytes:
         async with httpx.AsyncClient(base_url=self.base_url, headers=self.headers, transport=self.transport) as client:

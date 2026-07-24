@@ -3,6 +3,7 @@ package com.contentflow.internal.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import org.mockito.ArgumentCaptor;
 
 import com.contentflow.common.config.AgentProperties;
 import com.contentflow.document.service.DocumentService;
@@ -30,5 +31,25 @@ class InternalControllerTest {
 
         verify(documentService).saveChunks(6L, expectedChunks);
         verify(documentService).updateIndexStatus(6L, "READY", 1, null);
+    }
+
+    @Test
+    void savesDraftFromTrustedAgentThroughDedicatedRoute() {
+        ContentService contentService = mock(ContentService.class);
+        InternalController controller = new InternalController(
+                mock(ProjectService.class), contentService, mock(DocumentService.class),
+                new AgentProperties("http://agent", "internal-token"));
+        InternalDtos.SaveAgentContentRequest request = new InternalDtos.SaveAgentContentRequest(
+                9L, 7L, null, "JWT", "Summary", "# JWT", "ARTICLE", List.of("Java"),
+                List.of(new com.contentflow.content.dto.ContentDtos.ReferenceItem(3L, "jwt.md", 0)), "request-1");
+
+        assertThat(controller.saveAgentContent("internal-token", request).success()).isTrue();
+
+        ArgumentCaptor<ContentService.AgentDraftInput> input = ArgumentCaptor.forClass(ContentService.AgentDraftInput.class);
+        verify(contentService).saveAgentDraft(input.capture());
+        assertThat(input.getValue().userId()).isEqualTo(9L);
+        assertThat(input.getValue().projectId()).isEqualTo(7L);
+        assertThat(input.getValue().conversationId()).isNull();
+        assertThat(input.getValue().requestId()).isEqualTo("request-1");
     }
 }

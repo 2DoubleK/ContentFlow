@@ -2,6 +2,7 @@ package com.contentflow.agent.client;
 
 import com.contentflow.common.config.AgentProperties;
 import com.contentflow.content.dto.ContentDtos;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -12,6 +13,7 @@ public class AgentGenerationClient {
     public AgentGenerationClient(AgentProperties properties) {
         this.restClient = RestClient.builder()
                 .baseUrl(properties.baseUrl())
+                .requestFactory(new SimpleClientHttpRequestFactory())
                 .defaultHeader("X-Internal-Token", properties.internalToken())
                 .build();
     }

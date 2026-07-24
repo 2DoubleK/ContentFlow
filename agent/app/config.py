@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     embedding_model: str | None = None
     qwen_api_key: str | None = None
     qwen_model: str = "qwen-plus"
+    ollama_enabled: bool = True
+    ollama_base_url: str = "http://localhost:11434/v1"
+    ollama_api_key: str = "ollama"
+    ollama_model: str = "qwen3:1.7b"
+    ollama_context_length: int = 8192
+    llm_timeout_seconds: float = 60.0
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

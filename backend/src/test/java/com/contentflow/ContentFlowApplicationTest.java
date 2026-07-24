@@ -14,6 +14,7 @@ class ContentFlowApplicationTest {
                 "com.contentflow.auth.mapper",
                 "com.contentflow.project.mapper",
                 "com.contentflow.document.mapper",
-                "com.contentflow.content.mapper");
+                "com.contentflow.content.mapper",
+                "com.contentflow.agent.mapper");
     }
 }

@@ -37,7 +37,7 @@
 - Produces: `ModelRouter.candidates() -> list[ModelCandidate]` in cloud then Ollama order.
 - Consumes settings `ollama_enabled`, `ollama_base_url`, `ollama_api_key`, `ollama_model`, `ollama_context_length`, and `llm_timeout_seconds`.
 
-- [ ] **Step 1: Write failing provider-order and Ollama-option tests**
+- [x] **Step 1: Write failing provider-order and Ollama-option tests**
 
 ```python
 def test_router_orders_cloud_before_ollama():
@@ -50,13 +50,13 @@ def test_router_orders_cloud_before_ollama():
     assert candidates[1].model.extra_body == {"think": False, "options": {"num_ctx": 8192}}
 ```
 
-- [ ] **Step 2: Run tests and verify missing settings/router failure**
+- [x] **Step 2: Run tests and verify missing settings/router failure**
 
 Run: `agent/.venv312/Scripts/python.exe -m pytest agent/tests/test_config.py agent/tests/test_model_router.py -q`
 
 Expected: FAIL because `ModelRouter` and Ollama settings do not exist.
 
-- [ ] **Step 3: Implement candidate construction**
+- [x] **Step 3: Implement candidate construction**
 
 ```python
 @dataclass(frozen=True)
@@ -80,7 +80,7 @@ class ModelRouter:
         return result
 ```
 
-- [ ] **Step 4: Run focused tests**
+- [x] **Step 4: Run focused tests**
 
 Run: `agent/.venv312/Scripts/python.exe -m pytest agent/tests/test_config.py agent/tests/test_model_router.py -q`
 
@@ -100,7 +100,7 @@ Expected: all focused tests PASS.
 - Produces: `BackendClient.save_content_draft(payload) -> dict` using `/internal/agent/contents`.
 - Tracks: `tool_calls`, `retrieved_chunks`, `saved_draft_id`, and `saved_content`.
 
-- [ ] **Step 1: Write failing security and call-recording tests**
+- [x] **Step 1: Write failing security and call-recording tests**
 
 ```python
 @pytest.mark.asyncio
@@ -119,13 +119,13 @@ def test_search_tool_forces_runtime_project():
     assert toolbox.tool_calls == ["search_knowledge"]
 ```
 
-- [ ] **Step 2: Run tests and verify missing toolbox failure**
+- [x] **Step 2: Run tests and verify missing toolbox failure**
 
 Run: `agent/.venv312/Scripts/python.exe -m pytest agent/tests/test_react_tools.py agent/tests/test_backend_client.py -q`
 
 Expected: FAIL because runtime tools and the new backend route do not exist.
 
-- [ ] **Step 3: Implement tools and reference validation**
+- [x] **Step 3: Implement tools and reference validation**
 
 ```python
 def _validate_reference(self, reference: ReferenceItem) -> bool:
@@ -135,7 +135,7 @@ def _validate_reference(self, reference: ReferenceItem) -> bool:
 
 `langchain_tools()` returns structured async/sync tools whose schemas expose documented arguments, while each implementation verifies them against the runtime context before acting.
 
-- [ ] **Step 4: Run focused tests**
+- [x] **Step 4: Run focused tests**
 
 Run: `agent/.venv312/Scripts/python.exe -m pytest agent/tests/test_react_tools.py agent/tests/test_backend_client.py -q`
 
@@ -159,7 +159,7 @@ Expected: tool security, route, metadata, and save-intent tests PASS.
 - Extends: `GenerateResponse.saved_draft_id` serialized as `savedDraftId`.
 - Preserves: Stage 11 generation fields and `/generate` request compatibility.
 
-- [ ] **Step 1: Write failing provider failover and save-route tests**
+- [x] **Step 1: Write failing provider failover and save-route tests**
 
 ```python
 @pytest.mark.asyncio
@@ -178,13 +178,13 @@ async def test_deterministic_save_calls_all_three_tools_once():
     assert result.saved_draft_id == 31
 ```
 
-- [ ] **Step 2: Run tests and verify missing runner failure**
+- [x] **Step 2: Run tests and verify missing runner failure**
 
 Run: `agent/.venv312/Scripts/python.exe -m pytest agent/tests/test_react_runner.py agent/tests/test_graph.py -q`
 
 Expected: FAIL because `ReActRunner` and Stage 12 state fields do not exist.
 
-- [ ] **Step 3: Implement bounded provider attempts and deterministic fallback**
+- [x] **Step 3: Implement bounded provider attempts and deterministic fallback**
 
 ```python
 for candidate in self.model_router.candidates():
@@ -198,7 +198,7 @@ return await self._run_deterministic(runtime, user_request)
 
 The model executor uses `create_react_agent(..., response_format=GeneratedContent)` with a bounded recursion limit. Ollama prompts begin with `/no_think`. The save tool is bound only when `save_requested` is true. A provider result that omits required context/search/save calls is invalid and moves to the next provider before deterministic fallback.
 
-- [ ] **Step 4: Integrate the runner into LangGraph**
+- [x] **Step 4: Integrate the runner into LangGraph**
 
 ```text
 START -> run_react_agent -> format_output -> END
@@ -206,7 +206,7 @@ START -> run_react_agent -> format_output -> END
 
 `run_react_agent` writes all Stage 11 compatibility fields plus `tool_calls`, `active_model_provider`, `save_requested`, and `saved_draft_id`.
 
-- [ ] **Step 5: Run focused tests**
+- [x] **Step 5: Run focused tests**
 
 Run: `agent/.venv312/Scripts/python.exe -m pytest agent/tests/test_react_runner.py agent/tests/test_graph.py -q`
 
@@ -230,7 +230,7 @@ Expected: cloud, Ollama, deterministic, ordinary generation, and explicit-save p
 - Adds: `AgentConversationMapper.existsOwned(id, userId, projectId)`.
 - Persists: `conversation_id`, `content`, `markdown`, `content_type`, `DRAFT`, tags, and references.
 
-- [ ] **Step 1: Write failing controller/service tests**
+- [x] **Step 1: Write failing controller/service tests**
 
 ```java
 @Test
@@ -254,13 +254,13 @@ void rejectsConversationOwnedByAnotherProject() {
 }
 ```
 
-- [ ] **Step 2: Run focused backend tests and verify failure**
+- [x] **Step 2: Run focused backend tests and verify failure**
 
 Run: `mvn -f backend/pom.xml -Dtest=InternalControllerTest,ContentServiceTest test`
 
 Expected: compilation/test failure because the endpoint, DTO, mapper, and entity fields do not exist.
 
-- [ ] **Step 3: Implement DTO, controller, ownership query, and persistence**
+- [x] **Step 3: Implement DTO, controller, ownership query, and persistence**
 
 ```java
 @Select("""
@@ -272,7 +272,7 @@ boolean existsOwned(Long id, Long userId, Long projectId);
 
 The controller verifies `X-Internal-Token` and delegates to `ContentService`. The service always calls `projectService.requireOwned`, checks a non-null conversation, inserts content, serializes references, and saves distinct nonblank tags in one transaction.
 
-- [ ] **Step 4: Run focused backend tests**
+- [x] **Step 4: Run focused backend tests**
 
 Run: `mvn -f backend/pom.xml -Dtest=InternalControllerTest,ContentServiceTest test`
 
@@ -288,27 +288,27 @@ Expected: all focused backend tests PASS.
 **Interfaces:**
 - Verifies cloud configuration, Ollama fallback, deterministic fallback, tool routing, real draft persistence, and service health.
 
-- [ ] **Step 1: Configure local cloud and Ollama providers**
+- [x] **Step 1: Configure local cloud and Ollama providers**
 
 Set ignored `agent/.env` values from the existing local credentials file without printing secrets. Configure `OLLAMA_MODEL=qwen3:1.7b`, `OLLAMA_CONTEXT_LENGTH=8192`, and `OLLAMA_ENABLED=true`.
 
-- [ ] **Step 2: Run all Agent tests**
+- [x] **Step 2: Run all Agent tests**
 
 Run: `agent/.venv312/Scripts/python.exe -m pytest agent/tests -q`
 
 Expected: all Agent tests PASS.
 
-- [ ] **Step 3: Run all backend tests**
+- [x] **Step 3: Run all backend tests**
 
 Run: `mvn -f backend/pom.xml test`
 
 Expected: all backend tests PASS.
 
-- [ ] **Step 4: Restart Agent and backend and verify health**
+- [x] **Step 4: Restart Agent and backend and verify health**
 
 Expected: `http://localhost:8000/health` returns `ok`; `http://localhost:8080/actuator/health` returns `UP`.
 
-- [ ] **Step 5: Execute both Stage 12 acceptance requests**
+- [x] **Step 5: Execute both Stage 12 acceptance requests**
 
 Ordinary request expected tools:
 
@@ -324,6 +324,21 @@ get_project_context, search_knowledge, save_content_draft
 
 The second response must contain `savedDraftId`, and PostgreSQL must contain exactly one matching `DRAFT` row.
 
-- [ ] **Step 6: Record completion and verification evidence**
+- [x] **Step 6: Record completion and verification evidence**
 
 Update Stage 12 in `开发步骤文档.md` with provider used, tool-call sequences, test counts, saved draft ID, and database verification.
+
+### Final verification evidence
+
+```text
+Agent tests: 56 passed
+Spring Boot tests: 27 passed
+Agent health: ok
+Backend health: UP
+Missing or invalid Agent internal token on generation and document routes: 401
+Cloud ordinary request: get_project_context, search_knowledge
+Forced cloud failure: Ollama executes required tools and generates content
+Public explicit-save request: savedDraftId=7, PostgreSQL rows added=1
+Database idempotency: agent_request_id partial unique index active
+Concurrent idempotency: transaction advisory lock active per requestId
+```
