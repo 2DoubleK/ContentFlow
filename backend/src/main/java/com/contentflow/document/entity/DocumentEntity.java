@@ -12,6 +12,10 @@ public class DocumentEntity {
     private Long projectId;
     private Long ownerId;
     private String filename;
+    private String fileUrl;
+    private String fileExt;
+    private String mimeType;
+    private Long fileSize;
     private String status;
     private String errorMessage;
     private OffsetDateTime createdAt;
@@ -24,6 +28,14 @@ public class DocumentEntity {
     public void setOwnerId(Long ownerId) { this.ownerId = ownerId; }
     public String getFilename() { return filename; }
     public void setFilename(String filename) { this.filename = filename; }
+    public String getFileUrl() { return fileUrl; }
+    public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
+    public String getFileExt() { return fileExt; }
+    public void setFileExt(String fileExt) { this.fileExt = fileExt; }
+    public String getMimeType() { return mimeType; }
+    public void setMimeType(String mimeType) { this.mimeType = mimeType; }
+    public Long getFileSize() { return fileSize; }
+    public void setFileSize(Long fileSize) { this.fileSize = fileSize; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public String getErrorMessage() { return errorMessage; }

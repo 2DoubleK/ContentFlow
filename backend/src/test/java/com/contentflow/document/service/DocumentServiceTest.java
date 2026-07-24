@@ -16,10 +16,10 @@ class DocumentServiceTest {
     @Test
     void rejectsUnsupportedFileTypeBeforeIndexing() {
         DocumentService service = new DocumentService(mock(DocumentMapper.class), mock(ProjectService.class), mock(AgentDocumentClient.class));
-        MockMultipartFile file = new MockMultipartFile("file", "demo.pdf", "application/pdf", "x".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "demo.exe", "application/octet-stream", "x".getBytes());
 
         assertThatThrownBy(() -> service.upload(1L, 2L, file))
                 .isInstanceOf(AppException.class)
-                .hasMessage("only txt and md files are supported");
+                .hasMessage("unsupported file");
     }
 }
