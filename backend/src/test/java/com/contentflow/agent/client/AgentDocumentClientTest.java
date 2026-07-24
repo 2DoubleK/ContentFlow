@@ -27,7 +27,7 @@ class AgentDocumentClientTest {
 
         try {
             AgentDocumentClient client = new AgentDocumentClient(new AgentProperties(
-                    "http://127.0.0.1:" + server.getAddress().getPort(), "test-token"));
+                    "http://127.0.0.1:" + server.getAddress().getPort(), "test-token", 5_000, 240_000));
 
             client.index(4L, 6L, 9L, "guide.md");
 

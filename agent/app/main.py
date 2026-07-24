@@ -70,6 +70,7 @@ async def generate(
         "user_id": request.user_id,
         "project_id": request.project_id,
         "conversation_id": request.conversation_id,
+        "request_id": request.request_id,
         "user_request": request.prompt,
     })
     return state["response"]

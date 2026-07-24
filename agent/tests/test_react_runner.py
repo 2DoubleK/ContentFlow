@@ -362,3 +362,21 @@ async def test_save_request_id_is_stable_across_provider_retry_after_lost_respon
     assert len(backend.persisted) == 1
     assert len(request_ids) == 1
     assert backend.attempts == [request_ids[0], request_ids[0]]
+
+
+@pytest.mark.asyncio
+async def test_save_request_id_uses_trusted_request_id_from_backend():
+    observed: list[str] = []
+
+    async def executor(candidate, toolbox, user_request):
+        observed.append(toolbox.save_request_id)
+        await toolbox.get_project_context(user_id=9, project_id=7)
+        return generated_content()
+
+    runner = ReActRunner(
+        StubRouter("cloud"), FakeBackend(), SpyRetrieval(), LlmService(), model_executor=executor
+    )
+
+    await runner.run(AgentRuntimeContext(9, 7, 4, False), "generate", save_request_id="request-1")
+
+    assert observed == ["request-1"]

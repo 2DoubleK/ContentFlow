@@ -18,7 +18,7 @@ Alternatives rejected:
 Use the existing tables:
 
 - `cf_agent_conversation`: one user/project conversation with UUID `thread_id`, title, status, and timestamps.
-- `cf_agent_message`: ordered USER and ASSISTANT messages with optional JSONB metadata.
+- `cf_agent_message`: ordered USER and ASSISTANT messages with optional JSONB metadata and a request ID for retry deduplication.
 
 Create a focused `com.contentflow.agent` module with controller, service, DTO, entity, and mapper classes. `AgentConversationService.requireOwned` is the single ownership gate for conversation detail and message operations.
 
@@ -29,11 +29,11 @@ Create a focused `com.contentflow.agent` module with controller, service, DTO, e
 - `GET /api/agent/conversations/{id}/messages`: list owned conversation messages by `created_at ASC, id ASC`.
 - `POST /api/agent/conversations/{id}/messages`: validate ownership and nonblank content, insert USER, call Agent with the conversation ID, insert ASSISTANT, touch the conversation timestamp, and return both persisted messages plus generation metadata.
 
-The send operation deliberately does not hold one database transaction open around the network call. If generation fails, the USER message remains in history and no fake ASSISTANT message is inserted.
+The send operation deliberately does not hold one database transaction open around the network call. USER messages track `PROCESSING`, `FAILED`, and `COMPLETED`; a failed request can be atomically claimed and resumed with the same request ID. A partial unique index on `(conversation_id, request_id)` for USER messages makes network retries return or resume the original USER/ASSISTANT pair instead of generating duplicate messages or drafts.
 
 ## Agent Integration
 
-Extend `AgentGenerationClient.generate` with a `conversationId` argument while preserving the existing no-conversation overload. The Agent already validates a non-null conversation through Spring Boot before saving a draft.
+Extend `AgentGenerationClient.generate` with conversation and request IDs while preserving existing overloads. The request ID is reused as the Agent draft-save idempotency key. Agent HTTP calls use bounded connect/read timeouts.
 
 Assistant metadata stores title, summary, tags, references, and `savedDraftId`. Message content stores the generated Markdown.
 
@@ -45,7 +45,7 @@ Replace the single prompt page with a three-column workspace:
 - Conversation sidebar with inline create control and project conversation list.
 - Main chat surface with ordered history, assistant output, saved-draft action, and a bottom composer.
 
-The page reuses the current blue, white, and cyan visual system. Conversation creation is inline rather than modal. Stage 13 uses normal request/response; SSE remains Stage 14.
+The page reuses the current blue, white, and cyan visual system. Conversation creation is inline rather than modal. Async responses are applied only when they still match the selected conversation/project. Stage 13 uses normal request/response; SSE remains Stage 14.
 
 ## Validation And Errors
 

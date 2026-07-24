@@ -18,6 +18,7 @@ class GenerateRequest(BaseModel):
     user_id: int = Field(alias="userId")
     project_id: int = Field(alias="projectId")
     conversation_id: int | None = Field(default=None, alias="conversationId")
+    request_id: str | None = Field(default=None, alias="requestId", max_length=64)
     prompt: str
 
 

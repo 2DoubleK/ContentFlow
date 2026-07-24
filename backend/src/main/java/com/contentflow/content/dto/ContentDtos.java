@@ -19,7 +19,12 @@ public class ContentDtos {
             this(title, summary, markdown, null);
         }
     }
-    public record AgentGenerateRequest(Long userId, Long projectId, Long conversationId, String prompt) {}
+    public record AgentGenerateRequest(
+            Long userId, Long projectId, Long conversationId, String requestId, String prompt) {
+        public AgentGenerateRequest(Long userId, Long projectId, Long conversationId, String prompt) {
+            this(userId, projectId, conversationId, null, prompt);
+        }
+    }
     public record AgentGenerateResponse(String title, String summary, String content, String markdown, List<String> tags,
                                         List<ReferenceItem> references, Long savedDraftId) {
         public AgentGenerateResponse(String title, String summary, String content, String markdown, List<String> tags,

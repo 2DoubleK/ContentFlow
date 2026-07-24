@@ -47,8 +47,13 @@ class ReActRunner:
         self.llm = llm
         self.model_executor = model_executor or self._execute_model
 
-    async def run(self, runtime: AgentRuntimeContext, user_request: str) -> ReActRunResult:
-        save_request_id = uuid4().hex
+    async def run(
+        self,
+        runtime: AgentRuntimeContext,
+        user_request: str,
+        save_request_id: str | None = None,
+    ) -> ReActRunResult:
+        save_request_id = save_request_id or uuid4().hex
         retrieval_required = self.llm.parse_request_fallback(user_request, {}).need_retrieval
         for candidate in self.model_router.candidates():
             toolbox = AgentToolbox(

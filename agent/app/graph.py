@@ -21,6 +21,7 @@ class ContentFlowState(TypedDict, total=False):
     user_id: int
     project_id: int
     conversation_id: int | None
+    request_id: str | None
     user_request: str
     project_context: dict
     parsed_request: ParsedContentRequest
@@ -53,6 +54,7 @@ def build_graph(
                 save_requested=save_requested,
             ),
             state["user_request"],
+            save_request_id=state.get("request_id"),
         )
         return {
             "project_context": result.project_context,

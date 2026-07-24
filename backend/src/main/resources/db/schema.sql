@@ -132,6 +132,9 @@ CREATE TABLE IF NOT EXISTS cf_agent_message (
     CONSTRAINT cf_agent_message_role_check CHECK (role IN ('SYSTEM', 'USER', 'ASSISTANT', 'TOOL'))
 );
 
+ALTER TABLE cf_agent_message ADD COLUMN IF NOT EXISTS request_id VARCHAR(64);
+ALTER TABLE cf_agent_message ADD COLUMN IF NOT EXISTS processing_status VARCHAR(16);
+
 CREATE INDEX IF NOT EXISTS idx_sys_user_username
     ON sys_user (username);
 
@@ -180,6 +183,13 @@ CREATE INDEX IF NOT EXISTS idx_cf_conversation_user
 
 CREATE INDEX IF NOT EXISTS idx_cf_message_conversation
     ON cf_agent_message (conversation_id);
+
+CREATE INDEX IF NOT EXISTS idx_cf_message_request
+    ON cf_agent_message (conversation_id, request_id, role);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_cf_message_user_request
+    ON cf_agent_message (conversation_id, request_id)
+    WHERE request_id IS NOT NULL AND role = 'USER';
 
 DROP TRIGGER IF EXISTS trg_sys_user_touch_updated_at ON sys_user;
 CREATE TRIGGER trg_sys_user_touch_updated_at

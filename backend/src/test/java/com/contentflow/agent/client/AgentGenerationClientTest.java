@@ -33,14 +33,15 @@ class AgentGenerationClientTest {
 
         try {
             AgentGenerationClient client = new AgentGenerationClient(new AgentProperties(
-                    "http://127.0.0.1:" + server.getAddress().getPort(), "test-token"));
+                    "http://127.0.0.1:" + server.getAddress().getPort(), "test-token", 5_000, 240_000));
 
-            ContentDtos.AgentGenerateResponse response = client.generate(9L, 7L, "write article");
+            ContentDtos.AgentGenerateResponse response = client.generate(9L, 7L, 4L, "request-1", "write article");
 
             assertThat(response.title()).isEqualTo("Title");
             assertThat(upgrade.get()).isNull();
             assertThat(token.get()).isEqualTo("test-token");
-            assertThat(requestBody.get()).contains("\"userId\":9").contains("\"projectId\":7");
+            assertThat(requestBody.get()).contains("\"userId\":9").contains("\"projectId\":7")
+                    .contains("\"conversationId\":4").contains("\"requestId\":\"request-1\"");
         } finally {
             server.stop(0);
         }

@@ -19,7 +19,7 @@ class InternalControllerTest {
         DocumentService documentService = mock(DocumentService.class);
         InternalController controller = new InternalController(
                 mock(ProjectService.class), mock(ContentService.class), documentService,
-                new AgentProperties("http://agent", "internal-token"));
+                new AgentProperties("http://agent", "internal-token", 5_000, 240_000));
         List<InternalDtos.DocumentChunkRequest> chunks = List.of(
                 new InternalDtos.DocumentChunkRequest(0, "knowledge", "project_4_document_6_chunk_0", 2));
         List<DocumentService.ChunkInput> expectedChunks = List.of(
@@ -38,7 +38,7 @@ class InternalControllerTest {
         ContentService contentService = mock(ContentService.class);
         InternalController controller = new InternalController(
                 mock(ProjectService.class), contentService, mock(DocumentService.class),
-                new AgentProperties("http://agent", "internal-token"));
+                new AgentProperties("http://agent", "internal-token", 5_000, 240_000));
         InternalDtos.SaveAgentContentRequest request = new InternalDtos.SaveAgentContentRequest(
                 9L, 7L, null, "JWT", "Summary", "# JWT", "ARTICLE", List.of("Java"),
                 List.of(new com.contentflow.content.dto.ContentDtos.ReferenceItem(3L, "jwt.md", 0)), "request-1");
