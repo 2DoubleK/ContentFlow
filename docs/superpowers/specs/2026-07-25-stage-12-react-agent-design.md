@@ -44,7 +44,7 @@ OLLAMA_CONTEXT_LENGTH=8192
 
 Both model providers use the same LangChain `ChatOpenAI` interface and the same bound tools. A cloud timeout, connection failure, invalid tool call, or invalid structured final response triggers Ollama. An Ollama failure triggers deterministic routing. Authorization errors and tool execution errors do not trigger another provider because repeating a business operation could duplicate a draft.
 
-The verified local model is `qwen3:1.7b` on Ollama `0.31.1`. Local requests disable thinking (`think=false`) so the small model reserves its output budget for tool calls and final content. The context window is capped at 8192 tokens to fit the available 6GB GPU memory.
+The verified local model is `qwen3:1.7b` on Ollama `0.31.1`. Local requests disable thinking with both `think=false` and the Qwen `/no_think` instruction so the small model reserves its output budget for tool calls and final content. The context window is capped at 8192 tokens to fit the available 6GB GPU memory.
 
 ## Components
 
