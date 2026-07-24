@@ -105,7 +105,6 @@ function Start-ServiceWindow {
 }
 
 Assert-CommandAvailable "mvn" "Install Maven and make sure it is on PATH."
-Assert-CommandAvailable "py" "Install Python 3.12 and the Windows py launcher."
 Assert-CommandAvailable "npm" "Install Node.js 20 or newer and make sure npm is on PATH."
 
 Assert-EnvFile "backend\.env"
@@ -115,6 +114,10 @@ Assert-EnvFile "web\.env"
 $backendDir = Join-Path $Root "backend"
 $agentDir = Join-Path $Root "agent"
 $webDir = Join-Path $Root "web"
+$agentBootstrapPython = "C:\Users\1\miniconda3\python.exe"
+if (-not (Test-Path $agentBootstrapPython)) {
+  throw "Python 3.12 was not found at $agentBootstrapPython. Install Python 3.12 or update start-dev.ps1."
+}
 
 $backendCommand = New-ServiceCommand `
   -Name "ContentFlow Backend" `
@@ -126,10 +129,10 @@ $agentCommand = New-ServiceCommand `
   -Name "ContentFlow Agent" `
   -EnvPath ".env" `
   -SetupLines @(
-    'if (-not $SkipInstall -and -not (Test-Path ".venv\Scripts\python.exe")) { py -3.12 -m venv .venv }',
-    'if (-not $SkipInstall -and (Test-Path ".venv\Scripts\python.exe")) { .\.venv\Scripts\python.exe -m pip install -e ".[test]" }'
+    "if (-not `$SkipInstall -and -not (Test-Path '.venv312\\Scripts\\python.exe')) { & '$agentBootstrapPython' -m venv .venv312 }",
+    'if (-not $SkipInstall -and (Test-Path ".venv312\Scripts\python.exe")) { .\.venv312\Scripts\python.exe -m pip install -e ".[test]" }'
   ) `
-  -RunLine 'if (Test-Path ".venv\Scripts\python.exe") { .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000 } else { py -3.12 -m uvicorn app.main:app --reload --port 8000 }'
+  -RunLine '.\.venv312\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000'
 
 $webCommand = New-ServiceCommand `
   -Name "ContentFlow Web" `

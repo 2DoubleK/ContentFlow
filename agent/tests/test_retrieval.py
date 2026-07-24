@@ -1,10 +1,17 @@
-from app.retrieval import RetrievalService
+from app.retrieval import RetrievalService, split_text
+
+
+def test_split_text_uses_configured_overlap_and_discards_blank_content():
+    chunks = split_text("\n\n" + "a" * 900 + "\n\n", chunk_size=800, chunk_overlap=120)
+
+    assert len(chunks) == 2
+    assert chunks[0][-120:] == chunks[1][:120]
 
 
 def test_retrieval_filters_by_project_id(tmp_path):
     service = RetrievalService(str(tmp_path))
-    service.index_text(1, 10, "a.txt", "alpha project guide")
-    service.index_text(2, 20, "b.txt", "beta project guide")
+    service.index_text(1, 10, "a.txt", "alpha project guide", owner_id=1)
+    service.index_text(2, 20, "b.txt", "beta project guide", owner_id=2)
 
     results = service.search(1, "project guide", limit=5)
 
@@ -15,11 +22,18 @@ def test_retrieval_filters_by_project_id(tmp_path):
 def test_pdf_content_is_indexed(tmp_path):
     service = RetrievalService(str(tmp_path))
 
-    chunks = service.index_file(3, 30, "guide.pdf", build_pdf("Spring Boot PDF guide"))
+    chunks = service.index_file(3, 30, "guide.pdf", build_pdf("Spring Boot PDF guide"), owner_id=7)
 
-    stored = service.collection.get(where={"documentId": 30})
-    assert chunks == 1
+    stored = service.collection.get(where={"document_id": 30}, include=["documents", "metadatas"])
+    assert len(chunks) == 1
     assert any("Spring Boot PDF guide" in document for document in stored["documents"])
+    assert stored["metadatas"][0] == {
+        "project_id": 3,
+        "document_id": 30,
+        "file_name": "guide.pdf",
+        "chunk_index": 0,
+        "owner_id": 7,
+    }
 
 
 def build_pdf(text: str) -> bytes:

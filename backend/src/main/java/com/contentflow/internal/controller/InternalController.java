@@ -10,6 +10,9 @@ import com.contentflow.internal.dto.InternalDtos;
 import com.contentflow.project.entity.ProjectEntity;
 import com.contentflow.project.service.ProjectService;
 import org.springframework.http.HttpStatus;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -70,6 +73,17 @@ public class InternalController {
         documentService.updateIndexStatus(id, request.status(), request.chunkCount() == null ? 0 : request.chunkCount(),
                 request.errorMessage());
         return ApiResponse.ok(null);
+    }
+
+    @GetMapping("/documents/{id}/download")
+    public ResponseEntity<InputStreamResource> download(@RequestHeader(value = "X-Internal-Token", required = false) String token,
+                                                        @PathVariable Long id) {
+        verify(token);
+        DocumentService.DownloadFile file = documentService.downloadForAgent(id);
+        MediaType contentType = file.mimeType() == null ? MediaType.APPLICATION_OCTET_STREAM : MediaType.parseMediaType(file.mimeType());
+        return ResponseEntity.ok().contentType(contentType)
+                .header("Content-Disposition", "attachment; filename=\"" + file.filename() + "\"")
+                .body(new InputStreamResource(file.input()));
     }
 
     private void verify(String token) {

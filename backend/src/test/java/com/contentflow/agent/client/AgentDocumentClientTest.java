@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 class AgentDocumentClientTest {
     @Test
-    void sendsDocumentAsMultipartFormData() throws Exception {
+    void sendsDocumentIndexRequestAsJson() throws Exception {
         AtomicReference<String> contentType = new AtomicReference<>();
         AtomicReference<String> upgrade = new AtomicReference<>();
         AtomicReference<String> requestBody = new AtomicReference<>();
@@ -29,17 +29,15 @@ class AgentDocumentClientTest {
             AgentDocumentClient client = new AgentDocumentClient(new AgentProperties(
                     "http://127.0.0.1:" + server.getAddress().getPort(), "test-token"));
 
-            client.index(4L, 6L, "guide.md", "knowledge".getBytes(StandardCharsets.UTF_8));
+            client.index(4L, 6L, 9L, "guide.md");
 
-            assertThat(contentType.get()).startsWith("multipart/form-data;boundary=");
+            assertThat(contentType.get()).startsWith("application/json");
             assertThat(upgrade.get()).isNull();
             assertThat(requestBody.get())
-                    .contains("name=\"projectId\"")
-                    .contains("\r\n\r\n4\r\n")
-                    .contains("name=\"documentId\"")
-                    .contains("\r\n\r\n6\r\n")
-                    .contains("name=\"file\"; filename=\"guide.md\"")
-                    .contains("knowledge");
+                    .contains("\"projectId\":4")
+                    .contains("\"documentId\":6")
+                    .contains("\"userId\":9")
+                    .contains("\"fileName\":\"guide.md\"");
         } finally {
             server.stop(0);
         }

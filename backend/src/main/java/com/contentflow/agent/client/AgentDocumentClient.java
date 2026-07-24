@@ -1,12 +1,11 @@
 package com.contentflow.agent.client;
 
 import com.contentflow.common.config.AgentProperties;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
+import java.util.Map;
 
 @Component
 public class AgentDocumentClient {
@@ -20,19 +19,10 @@ public class AgentDocumentClient {
                 .build();
     }
 
-    public void index(Long projectId, Long documentId, String filename, byte[] bytes) {
-        LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("projectId", projectId.toString());
-        body.add("documentId", documentId.toString());
-        body.add("file", new ByteArrayResource(bytes) {
-            @Override
-            public String getFilename() {
-                return filename;
-            }
-        });
+    public void index(Long projectId, Long documentId, Long userId, String filename) {
         restClient.post().uri("/documents/index")
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .body(body)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("projectId", projectId, "documentId", documentId, "userId", userId, "fileName", filename))
                 .retrieve()
                 .toBodilessEntity();
     }

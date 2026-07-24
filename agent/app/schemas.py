@@ -7,6 +7,13 @@ class IndexResponse(BaseModel):
     chunks: int
 
 
+class DocumentIndexRequest(BaseModel):
+    project_id: int = Field(alias="projectId")
+    document_id: int = Field(alias="documentId")
+    user_id: int = Field(alias="userId")
+    file_name: str = Field(alias="fileName")
+
+
 class GenerateRequest(BaseModel):
     project_id: int = Field(alias="projectId")
     prompt: str

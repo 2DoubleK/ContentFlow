@@ -1,6 +1,7 @@
 package com.contentflow.document.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.contentflow.agent.client.AgentDocumentClient;
 import com.contentflow.common.exception.AppException;
 import com.contentflow.document.dto.DocumentDtos;
@@ -64,13 +65,13 @@ public class DocumentService {
             String objectKey = "user-" + ownerId + "/project-" + projectId + "/document-" + document.getId() + "/" + UUID.randomUUID() + "-" + filename;
             document.setFileUrl(objectKey);
             if (minioService != null) minioService.upload(file.getInputStream(), file.getSize(), file.getContentType(), objectKey);
-            agentDocumentClient.index(projectId, document.getId(), filename, file.getBytes());
-            document.setStatus("READY");
+            documentMapper.updateById(document);
+            agentDocumentClient.index(projectId, document.getId(), ownerId, filename);
         } catch (IOException | RuntimeException ex) {
             document.setStatus("FAILED");
             document.setErrorMessage(ex.getMessage());
+            documentMapper.updateById(document);
         }
-        documentMapper.updateById(document);
         return toResponse(document);
     }
 
@@ -99,20 +100,26 @@ public class DocumentService {
         document.setErrorMessage(null);
         documentMapper.updateById(document);
         if (minioService != null && document.getFileUrl() != null) {
-            try (var input = minioService.get(document.getFileUrl())) {
-                agentDocumentClient.index(document.getProjectId(), document.getId(), document.getFilename(), input.readAllBytes());
-                document.setStatus("READY");
-            } catch (IOException | RuntimeException exception) {
+            try {
+                agentDocumentClient.index(document.getProjectId(), document.getId(), document.getOwnerId(), document.getFilename());
+            } catch (RuntimeException exception) {
                 document.setStatus("FAILED");
                 document.setErrorMessage(exception.getMessage());
+                documentMapper.updateById(document);
             }
-            documentMapper.updateById(document);
         }
         return toResponse(document);
     }
 
     public DownloadFile download(Long ownerId, Long documentId) {
-        DocumentEntity document = requireOwned(ownerId, documentId);
+        return downloadFile(requireOwned(ownerId, documentId));
+    }
+
+    public DownloadFile downloadForAgent(Long documentId) {
+        return downloadFile(requireDocument(documentId));
+    }
+
+    private DownloadFile downloadFile(DocumentEntity document) {
         if (minioService == null || document.getFileUrl() == null) {
             throw new AppException(HttpStatus.NOT_FOUND, "file not available");
         }
@@ -140,11 +147,12 @@ public class DocumentService {
     }
 
     public void updateIndexStatus(Long documentId, String status, int chunkCount, String errorMessage) {
-        DocumentEntity document = requireDocument(documentId);
-        document.setStatus(status);
-        document.setChunkCount(chunkCount);
-        document.setErrorMessage(errorMessage);
-        documentMapper.updateById(document);
+        requireDocument(documentId);
+        documentMapper.update(null, new LambdaUpdateWrapper<DocumentEntity>()
+                .eq(DocumentEntity::getId, documentId)
+                .set(DocumentEntity::getStatus, status)
+                .set(DocumentEntity::getChunkCount, chunkCount)
+                .set(DocumentEntity::getErrorMessage, errorMessage));
     }
 
     private DocumentEntity requireOwned(Long ownerId, Long documentId) {

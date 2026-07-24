@@ -36,6 +36,12 @@ class BackendClient:
         project_id = payload["projectId"]
         return await self._request("POST", f"/internal/projects/{project_id}/contents", json=payload)
 
+    async def download_document(self, document_id: int) -> bytes:
+        async with httpx.AsyncClient(base_url=self.base_url, headers=self.headers, transport=self.transport) as client:
+            response = await client.get(f"/internal/documents/{document_id}/download")
+            response.raise_for_status()
+            return response.content
+
     async def _request(self, method: str, path: str, **kwargs) -> dict | None:
         async with httpx.AsyncClient(base_url=self.base_url, headers=self.headers, transport=self.transport) as client:
             response = await client.request(method, path, **kwargs)
