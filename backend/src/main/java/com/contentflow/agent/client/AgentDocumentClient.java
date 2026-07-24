@@ -3,6 +3,7 @@ package com.contentflow.agent.client;
 import com.contentflow.common.config.AgentProperties;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
@@ -14,6 +15,7 @@ public class AgentDocumentClient {
     public AgentDocumentClient(AgentProperties properties) {
         this.restClient = RestClient.builder()
                 .baseUrl(properties.baseUrl())
+                .requestFactory(new SimpleClientHttpRequestFactory())
                 .defaultHeader("X-Internal-Token", properties.internalToken())
                 .build();
     }
@@ -33,5 +35,9 @@ public class AgentDocumentClient {
                 .body(body)
                 .retrieve()
                 .toBodilessEntity();
+    }
+
+    public void delete(Long documentId) {
+        restClient.delete().uri("/documents/{id}", documentId).retrieve().toBodilessEntity();
     }
 }

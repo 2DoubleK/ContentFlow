@@ -17,6 +17,7 @@ import com.contentflow.common.api.PageResult;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class ContentService {
@@ -30,6 +31,7 @@ public class ContentService {
         this(contentMapper, projectService, agentGenerationClient, null);
     }
 
+    @Autowired
     public ContentService(ContentMapper contentMapper, ProjectService projectService, AgentGenerationClient agentGenerationClient,
                           ContentTagMapper contentTagMapper) {
         this.contentMapper = contentMapper;

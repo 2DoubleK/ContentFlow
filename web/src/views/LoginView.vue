@@ -14,9 +14,14 @@
         <el-form-item label="密码">
           <el-input v-model="password" type="password" show-password />
         </el-form-item>
+        <template v-if="registerMode">
+          <el-form-item label="确认密码"><el-input v-model="confirmPassword" type="password" show-password /></el-form-item>
+          <el-form-item label="邮箱"><el-input v-model="email" /></el-form-item>
+          <el-form-item label="手机号"><el-input v-model="phone" /></el-form-item>
+        </template>
         <div class="login-actions">
           <el-button :icon="LogIn" type="primary" :loading="loading" @click="submitLogin">登录</el-button>
-          <el-button :icon="UserPlus" :loading="loading" @click="submitRegister">注册</el-button>
+          <el-button :icon="UserPlus" :loading="loading" @click="registerMode ? submitRegister() : registerMode = true">注册</el-button>
         </div>
         <p v-if="error" class="error">{{ error }}</p>
       </el-form>
@@ -29,11 +34,16 @@ import { LogIn, UserPlus } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import axios from 'axios'
 
 const auth = useAuthStore()
 const router = useRouter()
 const username = ref('')
 const password = ref('')
+const confirmPassword = ref('')
+const email = ref('')
+const phone = ref('')
+const registerMode = ref(false)
 const loading = ref(false)
 const error = ref('')
 
@@ -42,7 +52,20 @@ async function submitLogin() {
 }
 
 async function submitRegister() {
-  await submit(() => auth.register(username.value, password.value))
+  const validationError = validateRegistration()
+  if (validationError) {
+    error.value = validationError
+    return
+  }
+  await submit(() => auth.register({ username: username.value, password: password.value, confirmPassword: confirmPassword.value, email: email.value, phone: phone.value }))
+}
+
+function validateRegistration() {
+  if (!username.value.trim()) return '请输入账号'
+  if (password.value.length < 6) return '密码至少需要 6 位'
+  if (password.value !== confirmPassword.value) return '两次输入的密码不一致'
+  if (!email.value.trim() && !phone.value.trim()) return '邮箱或手机号至少填写一项'
+  return ''
 }
 
 async function submit(action: () => Promise<void>) {
@@ -51,8 +74,10 @@ async function submit(action: () => Promise<void>) {
   try {
     await action()
     await router.push('/')
-  } catch {
-    error.value = '账号或密码无效'
+  } catch (cause) {
+    error.value = axios.isAxiosError(cause)
+      ? cause.response?.data?.message || '请求失败，请稍后重试'
+      : '请求失败，请稍后重试'
   } finally {
     loading.value = false
   }

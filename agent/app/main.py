@@ -26,6 +26,12 @@ async def index_document(
     return IndexResponse(projectId=projectId, documentId=documentId, chunks=chunks)
 
 
+@app.delete("/documents/{document_id}")
+def delete_document(document_id: int) -> dict[str, str]:
+    retrieval.collection.delete(where={"documentId": document_id})
+    return {"status": "ok"}
+
+
 @app.post("/generate", response_model=GenerateResponse)
 def generate(request: GenerateRequest) -> GenerateResponse:
     state = graph.invoke({"project_id": request.project_id, "prompt": request.prompt})

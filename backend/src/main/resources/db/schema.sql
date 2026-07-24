@@ -11,14 +11,23 @@ $$;
 CREATE TABLE IF NOT EXISTS sys_user (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(64) NOT NULL,
+    email VARCHAR(255),
+    phone VARCHAR(32),
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(32) NOT NULL DEFAULT 'USER',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT sys_user_username_unique UNIQUE (username),
+    CONSTRAINT sys_user_email_unique UNIQUE (email),
+    CONSTRAINT sys_user_phone_unique UNIQUE (phone),
     CONSTRAINT sys_user_username_not_blank CHECK (length(btrim(username)) > 0),
     CONSTRAINT sys_user_role_check CHECK (role IN ('USER', 'ADMIN'))
 );
+
+ALTER TABLE sys_user ADD COLUMN IF NOT EXISTS email VARCHAR(255);
+ALTER TABLE sys_user ADD COLUMN IF NOT EXISTS phone VARCHAR(32);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sys_user_email_unique ON sys_user (email) WHERE email IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sys_user_phone_unique ON sys_user (phone) WHERE phone IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS cf_project (
     id BIGSERIAL PRIMARY KEY,

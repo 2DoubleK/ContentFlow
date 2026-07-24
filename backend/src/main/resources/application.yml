@@ -4,13 +4,13 @@ server:
 spring:
   datasource:
     url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/contentflow}
-    username: ${POSTGRES_USER:contentflow}
-    password: ${POSTGRES_PASSWORD:contentflow}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
+      max-file-size: 20MB
+      max-request-size: 20MB
 
 mybatis-plus:
   configuration:
@@ -24,7 +24,11 @@ contentflow:
     base-url: ${AGENT_BASE_URL:http://localhost:8000}
     internal-token: ${INTERNAL_API_TOKEN:dev-internal-token}
   minio:
-    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9000}
     access-key: ${MINIO_ROOT_USER:minioadmin}
     secret-key: ${MINIO_ROOT_PASSWORD:minioadmin}
     bucket: ${MINIO_BUCKET:contentflow}
+
+logging:
+  file:
+    name: ${LOG_FILE:logs/contentflow.log}

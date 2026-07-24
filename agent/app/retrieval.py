@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import hashlib
+from io import BytesIO
 from pathlib import Path
 
 import chromadb
 from chromadb.api.models.Collection import Collection
+from pypdf import PdfReader
 
 
 class RetrievalService:
@@ -26,9 +28,12 @@ class RetrievalService:
 
     def index_file(self, project_id: int, document_id: int, filename: str, data: bytes) -> int:
         suffix = Path(filename).suffix.lower()
-        if suffix not in {".txt", ".md"}:
-            raise ValueError("only txt and md files are supported")
-        text = data.decode("utf-8", errors="ignore")
+        if suffix == ".pdf":
+            text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(data)).pages)
+        elif suffix in {".txt", ".md", ".markdown"}:
+            text = data.decode("utf-8", errors="ignore")
+        else:
+            raise ValueError("only pdf, txt and md files are supported")
         return self.index_text(project_id, document_id, filename, text)
 
     def search(self, project_id: int, query: str, limit: int = 4) -> list[str]:

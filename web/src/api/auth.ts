@@ -10,6 +10,14 @@ export function login(username: string, password: string) {
   return http.post<ApiResponse<AuthResponse>>('/api/auth/login', { username, password })
 }
 
-export function register(username: string, password: string) {
-  return http.post<ApiResponse<AuthResponse>>('/api/auth/register', { username, password })
+export interface RegisterRequest {
+  username: string
+  password: string
+  confirmPassword: string
+  email: string
+  phone: string
+}
+
+export function register(request: RegisterRequest) {
+  return http.post<ApiResponse<AuthResponse>>('/api/auth/register', request)
 }

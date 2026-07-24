@@ -23,14 +23,22 @@ public class AuthService {
     }
 
     public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest request) {
-        validate(request.username(), request.password());
+        String email = normalize(request.email());
+        String phone = normalize(request.phone());
+        validate(request, email, phone);
         UserEntity existing = userMapper.selectOne(new LambdaQueryWrapper<UserEntity>()
                 .eq(UserEntity::getUsername, request.username()));
         if (existing != null) {
-            throw new AppException(HttpStatus.BAD_REQUEST, "username already exists");
+            throw new AppException(HttpStatus.BAD_REQUEST, "账号已存在");
         }
+        if (email != null && userMapper.selectCount(new LambdaQueryWrapper<UserEntity>().eq(UserEntity::getEmail, email)) > 0)
+            throw new AppException(HttpStatus.BAD_REQUEST, "邮箱已存在");
+        if (phone != null && userMapper.selectCount(new LambdaQueryWrapper<UserEntity>().eq(UserEntity::getPhone, phone)) > 0)
+            throw new AppException(HttpStatus.BAD_REQUEST, "手机号已存在");
         UserEntity user = new UserEntity();
         user.setUsername(request.username());
+        user.setEmail(email);
+        user.setPhone(phone);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole("USER");
         userMapper.insert(user);
@@ -41,7 +49,7 @@ public class AuthService {
         UserEntity user = userMapper.selectOne(new LambdaQueryWrapper<UserEntity>()
                 .eq(UserEntity::getUsername, request.username()));
         if (user == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new AppException(HttpStatus.UNAUTHORIZED, "invalid username or password");
+            throw new AppException(HttpStatus.UNAUTHORIZED, "用户名或密码错误");
         }
         return response(user);
     }
@@ -54,10 +62,17 @@ public class AuthService {
         return new AuthDtos.CurrentUserResponse(user.getId(), user.getUsername(), user.getRole());
     }
 
-    private void validate(String username, String password) {
-        if (username == null || username.isBlank() || password == null || password.length() < 6) {
-            throw new AppException(HttpStatus.BAD_REQUEST, "username and password are required");
-        }
+    private void validate(AuthDtos.RegisterRequest request, String email, String phone) {
+        if (request.username() == null || request.username().isBlank()) throw new AppException(HttpStatus.BAD_REQUEST, "请输入账号");
+        if (request.password() == null || request.password().length() < 6) throw new AppException(HttpStatus.BAD_REQUEST, "密码至少需要 6 位");
+        if (!request.password().equals(request.confirmPassword())) throw new AppException(HttpStatus.BAD_REQUEST, "两次输入的密码不一致");
+        if (email == null && phone == null)
+            throw new AppException(HttpStatus.BAD_REQUEST, "邮箱或手机号至少填写一项");
+    }
+
+    private String normalize(String value) {
+        if (value == null || value.isBlank()) return null;
+        return value.trim();
     }
 
     private AuthDtos.AuthResponse response(UserEntity user) {

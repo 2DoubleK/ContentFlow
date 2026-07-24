@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { login, register, type AuthResponse } from '../api/auth'
+import { login, register, type AuthResponse, type RegisterRequest } from '../api/auth'
 
 const TOKEN_KEY = 'contentflow_token'
 const USER_KEY = 'contentflow_user'
@@ -23,8 +23,8 @@ export const useAuthStore = defineStore('auth', {
       const response = await login(username, password)
       this.setSession(response.data.data)
     },
-    async register(username: string, password: string) {
-      const response = await register(username, password)
+    async register(request: RegisterRequest) {
+      const response = await register(request)
       this.setSession(response.data.data)
     },
     logout() {

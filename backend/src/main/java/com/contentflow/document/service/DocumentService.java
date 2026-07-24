@@ -8,12 +8,14 @@ import com.contentflow.document.entity.DocumentEntity;
 import com.contentflow.document.mapper.DocumentMapper;
 import com.contentflow.project.service.ProjectService;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 import com.contentflow.storage.MinioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class DocumentService {
@@ -25,6 +27,7 @@ public class DocumentService {
     public DocumentService(DocumentMapper documentMapper, ProjectService projectService, AgentDocumentClient agentDocumentClient) {
         this(documentMapper, projectService, agentDocumentClient, null);
     }
+    @Autowired
     public DocumentService(DocumentMapper documentMapper, ProjectService projectService, AgentDocumentClient agentDocumentClient, MinioService minioService) {
         this.documentMapper = documentMapper;
         this.projectService = projectService;
@@ -76,6 +79,7 @@ public class DocumentService {
 
     public void delete(Long ownerId, Long documentId) {
         DocumentEntity document = requireOwned(ownerId, documentId);
+        agentDocumentClient.delete(documentId);
         if (minioService != null && document.getFileUrl() != null) minioService.delete(document.getFileUrl());
         documentMapper.deleteById(documentId);
     }
@@ -85,7 +89,25 @@ public class DocumentService {
         document.setStatus("INDEXING");
         document.setErrorMessage(null);
         documentMapper.updateById(document);
+        if (minioService != null && document.getFileUrl() != null) {
+            try (var input = minioService.get(document.getFileUrl())) {
+                agentDocumentClient.index(document.getProjectId(), document.getId(), document.getFilename(), input.readAllBytes());
+                document.setStatus("READY");
+            } catch (IOException | RuntimeException exception) {
+                document.setStatus("FAILED");
+                document.setErrorMessage(exception.getMessage());
+            }
+            documentMapper.updateById(document);
+        }
         return toResponse(document);
+    }
+
+    public DownloadFile download(Long ownerId, Long documentId) {
+        DocumentEntity document = requireOwned(ownerId, documentId);
+        if (minioService == null || document.getFileUrl() == null) {
+            throw new AppException(HttpStatus.NOT_FOUND, "file not available");
+        }
+        return new DownloadFile(document.getFilename(), document.getMimeType(), minioService.get(document.getFileUrl()));
     }
 
     private DocumentEntity requireOwned(Long ownerId, Long documentId) {
@@ -98,5 +120,8 @@ public class DocumentService {
     DocumentDtos.DocumentResponse toResponse(DocumentEntity document) {
         return new DocumentDtos.DocumentResponse(document.getId(), document.getProjectId(), document.getFilename(),
                 document.getStatus(), document.getErrorMessage());
+    }
+
+    public record DownloadFile(String filename, String mimeType, InputStream input) {
     }
 }
