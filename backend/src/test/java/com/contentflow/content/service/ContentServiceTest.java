@@ -21,15 +21,22 @@ class ContentServiceTest {
         ContentMapper mapper = mock(ContentMapper.class);
         ProjectService projectService = mock(ProjectService.class);
         AgentGenerationClient agentClient = mock(AgentGenerationClient.class);
-        when(agentClient.generate(2L, "write article")).thenReturn(
-                new ContentDtos.AgentGenerateResponse("Title", "Summary", "# Body", java.util.List.of()));
-        ContentService service = new ContentService(mapper, projectService, agentClient);
+        ContentTagMapper tagMapper = mock(ContentTagMapper.class);
+        ContentDtos.ReferenceItem reference = new ContentDtos.ReferenceItem(3L, "guide.md", 1);
+        when(agentClient.generate(1L, 2L, "write article")).thenReturn(
+                new ContentDtos.AgentGenerateResponse("Title", "Summary", "# Body", "# Body", java.util.List.of("Java"),
+                        java.util.List.of(reference)));
+        ContentService service = new ContentService(mapper, projectService, agentClient, tagMapper);
 
         ContentDtos.ContentResponse response = service.generate(1L, 2L, new ContentDtos.GenerateRequest("write article"));
 
         assertThat(response.title()).isEqualTo("Title");
         assertThat(response.markdown()).isEqualTo("# Body");
-        verify(mapper).insert(any(ContentEntity.class));
+        ArgumentCaptor<ContentEntity> content = ArgumentCaptor.forClass(ContentEntity.class);
+        verify(mapper).insert(content.capture());
+        assertThat(content.getValue().getReferencesJson()).contains("guide.md");
+        verify(tagMapper).insert(any(com.contentflow.content.entity.ContentTagEntity.class));
+        verify(agentClient).generate(1L, 2L, "write article");
     }
 
     @Test

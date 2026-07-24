@@ -1,52 +1,97 @@
-from typing import TypedDict
+from __future__ import annotations
 
+from typing import Annotated, TypedDict
+
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.message import add_messages
 
+from app.backend_client import BackendClient
 from app.llm import LlmService
 from app.retrieval import RetrievalService
-from app.schemas import GenerateResponse
+from app.schemas import GeneratedContent, GenerateResponse, ParsedContentRequest, RetrievedChunk
 
 
-class ContentState(TypedDict):
+class ContentFlowState(TypedDict, total=False):
+    messages: Annotated[list[AnyMessage], add_messages]
+    user_id: int
     project_id: int
-    prompt: str
-    query: str
-    contexts: list[str]
-    generated: dict[str, str]
+    conversation_id: int
+    user_request: str
+    project_context: dict
+    parsed_request: ParsedContentRequest
+    retrieved_chunks: list[RetrievedChunk]
+    generated_content: GeneratedContent
     response: GenerateResponse
+    error_message: str | None
 
 
-def build_graph(retrieval: RetrievalService, llm: LlmService):
-    graph = StateGraph(ContentState)
+def build_graph(retrieval: RetrievalService, llm: LlmService, backend: BackendClient):
+    builder = StateGraph(ContentFlowState)
 
-    def parse_request(state: ContentState) -> ContentState:
-        state["query"] = state["prompt"].strip()
-        return state
+    async def load_project_context(state: ContentFlowState) -> dict:
+        context = await backend.get_project_context(state["project_id"], state["user_id"])
+        return {
+            "project_context": context,
+            "retrieved_chunks": [],
+            "error_message": None,
+        }
 
-    def retrieve_context(state: ContentState) -> ContentState:
-        state["contexts"] = retrieval.search(state["project_id"], state["query"])
-        return state
+    def parse_request(state: ContentFlowState) -> dict:
+        parsed = llm.parse_request(state["user_request"], state["project_context"])
+        return {
+            "parsed_request": parsed,
+            "messages": [HumanMessage(content=state["user_request"])],
+        }
 
-    def generate_content(state: ContentState) -> ContentState:
-        state["generated"] = llm.generate(state["prompt"], state["contexts"])
-        return state
+    def route_after_parse(state: ContentFlowState) -> str:
+        return "retrieve" if state["parsed_request"].need_retrieval else "generate"
 
-    def format_output(state: ContentState) -> ContentState:
-        state["response"] = GenerateResponse(
-            title=state["generated"]["title"],
-            summary=state["generated"]["summary"],
-            markdown=state["generated"]["markdown"],
-            references=state["contexts"],
+    def retrieve_knowledge(state: ContentFlowState) -> dict:
+        chunks = retrieval.search_chunks(
+            state["project_id"],
+            state["parsed_request"].topic,
+            limit=5,
         )
-        return state
+        return {"retrieved_chunks": chunks}
 
-    graph.add_node("parse_request", parse_request)
-    graph.add_node("retrieve_context", retrieve_context)
-    graph.add_node("generate_content", generate_content)
-    graph.add_node("format_output", format_output)
-    graph.add_edge(START, "parse_request")
-    graph.add_edge("parse_request", "retrieve_context")
-    graph.add_edge("retrieve_context", "generate_content")
-    graph.add_edge("generate_content", "format_output")
-    graph.add_edge("format_output", END)
-    return graph.compile()
+    def generate_content(state: ContentFlowState) -> dict:
+        generated = llm.generate_content(
+            state["user_request"],
+            state["project_context"],
+            state["parsed_request"],
+            state.get("retrieved_chunks", []),
+        )
+        return {"generated_content": generated}
+
+    def format_output(state: ContentFlowState) -> dict:
+        generated = state["generated_content"]
+        response = GenerateResponse(
+            title=generated.title,
+            summary=generated.summary,
+            content=generated.content,
+            tags=generated.tags,
+            references=generated.references,
+            markdown=generated.content,
+        )
+        return {
+            "response": response,
+            "messages": [AIMessage(content=generated.content)],
+        }
+
+    builder.add_node("load_project_context", load_project_context)
+    builder.add_node("parse_request", parse_request)
+    builder.add_node("retrieve_knowledge", retrieve_knowledge)
+    builder.add_node("generate_content", generate_content)
+    builder.add_node("format_output", format_output)
+    builder.add_edge(START, "load_project_context")
+    builder.add_edge("load_project_context", "parse_request")
+    builder.add_conditional_edges(
+        "parse_request",
+        route_after_parse,
+        {"retrieve": "retrieve_knowledge", "generate": "generate_content"},
+    )
+    builder.add_edge("retrieve_knowledge", "generate_content")
+    builder.add_edge("generate_content", "format_output")
+    builder.add_edge("format_output", END)
+    return builder.compile()

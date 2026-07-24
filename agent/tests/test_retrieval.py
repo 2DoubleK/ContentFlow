@@ -19,6 +19,21 @@ def test_retrieval_filters_by_project_id(tmp_path):
     assert all("beta" not in item for item in results)
 
 
+def test_search_chunks_returns_project_scoped_content_and_metadata(tmp_path):
+    service = RetrievalService(str(tmp_path))
+    service.index_text(1, 10, "jwt-guide.md", "JWT authentication project guide", owner_id=1)
+    service.index_text(2, 20, "other.md", "JWT guide for another project", owner_id=2)
+
+    chunks = service.search_chunks(1, "JWT project guide", limit=5)
+
+    assert len(chunks) == 1
+    assert chunks[0].document_id == 10
+    assert chunks[0].file_name == "jwt-guide.md"
+    assert chunks[0].chunk_index == 0
+    assert "JWT" in chunks[0].content
+    assert chunks[0].distance is not None
+
+
 def test_pdf_content_is_indexed(tmp_path):
     service = RetrievalService(str(tmp_path))
 

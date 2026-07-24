@@ -12,7 +12,7 @@ from app.schemas import DocumentIndexRequest, GenerateRequest, GenerateResponse,
 app = FastAPI(title="ContentFlow Agent")
 logger = logging.getLogger(__name__)
 retrieval = RetrievalService(client=create_chroma_client(settings))
-graph = build_graph(retrieval, LlmService())
+graph = build_graph(retrieval, LlmService(), BackendClient())
 
 
 @app.get("/health")
@@ -57,6 +57,11 @@ def delete_document(document_id: int) -> dict[str, str]:
 
 
 @app.post("/generate", response_model=GenerateResponse)
-def generate(request: GenerateRequest) -> GenerateResponse:
-    state = graph.invoke({"project_id": request.project_id, "prompt": request.prompt})
+async def generate(request: GenerateRequest) -> GenerateResponse:
+    state = await graph.ainvoke({
+        "user_id": request.user_id,
+        "project_id": request.project_id,
+        "conversation_id": request.conversation_id,
+        "user_request": request.prompt,
+    })
     return state["response"]

@@ -45,11 +45,17 @@ public class ContentService {
         if (request.prompt() == null || request.prompt().isBlank()) {
             throw new AppException(HttpStatus.BAD_REQUEST, "prompt is required");
         }
-        ContentDtos.AgentGenerateResponse generated = agentGenerationClient.generate(projectId, request.prompt());
-        if (generated == null || generated.markdown() == null || generated.markdown().isBlank()) {
+        ContentDtos.AgentGenerateResponse generated = agentGenerationClient.generate(ownerId, projectId, request.prompt());
+        String markdown = generated == null || generated.markdown() == null || generated.markdown().isBlank()
+                ? generated == null ? null : generated.content()
+                : generated.markdown();
+        if (markdown == null || markdown.isBlank()) {
             throw new AppException(HttpStatus.BAD_GATEWAY, "agent returned empty content");
         }
-        return save(ownerId, projectId, generated.title(), generated.summary(), generated.markdown());
+        ContentDtos.ContentResponse response = save(ownerId, projectId, generated.title(), generated.summary(), markdown,
+                serializeReferences(generated.references()));
+        saveTags(response.id(), generated.tags());
+        return response;
     }
 
     @Transactional

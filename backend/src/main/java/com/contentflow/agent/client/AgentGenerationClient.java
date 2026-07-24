@@ -16,9 +16,9 @@ public class AgentGenerationClient {
                 .build();
     }
 
-    public ContentDtos.AgentGenerateResponse generate(Long projectId, String prompt) {
+    public ContentDtos.AgentGenerateResponse generate(Long userId, Long projectId, String prompt) {
         return restClient.post().uri("/generate")
-                .body(new ContentDtos.AgentGenerateRequest(projectId, prompt))
+                .body(new ContentDtos.AgentGenerateRequest(userId, projectId, null, prompt))
                 .retrieve()
                 .body(ContentDtos.AgentGenerateResponse.class);
     }

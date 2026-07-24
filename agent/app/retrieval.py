@@ -7,6 +7,8 @@ import chromadb
 from chromadb.api.models.Collection import Collection
 from pypdf import PdfReader
 
+from app.schemas import RetrievedChunk
+
 
 class RetrievalService:
     def __init__(self, persist_path: str | None = None, client=None) -> None:
@@ -49,12 +51,28 @@ class RetrievalService:
         self.collection.delete(where={"document_id": document_id})
 
     def search(self, project_id: int, query: str, limit: int = 4) -> list[str]:
+        return [chunk.content for chunk in self.search_chunks(project_id, query, limit)]
+
+    def search_chunks(self, project_id: int, query: str, limit: int = 5) -> list[RetrievedChunk]:
         result = self.collection.query(
             query_texts=[query],
             n_results=limit,
             where={"project_id": project_id},
+            include=["documents", "metadatas", "distances"],
         )
-        return result.get("documents", [[]])[0]
+        documents = (result.get("documents") or [[]])[0]
+        metadatas = (result.get("metadatas") or [[]])[0]
+        distances = (result.get("distances") or [[]])[0]
+        return [
+            RetrievedChunk(
+                documentId=int(metadata["document_id"]),
+                fileName=str(metadata["file_name"]),
+                chunkIndex=int(metadata["chunk_index"]),
+                content=document,
+                distance=float(distance) if distance is not None else None,
+            )
+            for document, metadata, distance in zip(documents, metadatas, distances)
+        ]
 
 
 def split_text(text: str, chunk_size: int = 800, chunk_overlap: int = 120) -> list[str]:
